@@ -1,0 +1,1074 @@
+id: vector
+name: Vector
+subtitle: Vector and Matrix Types  
+ordering:
+    - 2D Vector
+    - 3D Vector
+    - 4D Vector    
+    - Matrix
+    - Quaternion
+functions:
+#---------------------------------
+# vec2
+#--------------------------------- 
+- category: type
+  description: This type represents a 2D vector. Most mathematical operators such
+    as equality, addition, subtraction, multiplication and division are provided,
+    so you can use `vec2` data types similarly to how you use numerical types.
+    In addition there are a number of methods, such as `v:dot( vec2 )` that
+    can be called on vec2 types, please see the related items below.
+  examples:
+  - example: |
+      --Some vector operations
+      v1 = vec2( 1, 1 )
+      v2 = vec2( 4, 2 )
+
+      --Angle between
+      v1:angleBetween( v2 )
+
+      --Adding
+      v3 = v1 + v2
+
+      --Multiplying
+      v4 = v1 * 5.0
+
+      --Rotating by 45 degrees
+      v5 = v1:rotate(math.rad(45))
+  group: 2D Vector
+  id: vec2
+  name: vec2
+  parameters:
+  - description: float, the x component of this vec2
+    name: x
+  - description: float, the y component of this vec2
+    name: y
+  related:
+  - vec2.dot
+  - vec2.normalize
+  - vec2.dist
+  - vec2.distSqr
+  - vec2.len
+  - vec2.lenSqr
+  - vec2.cross
+  - vec2.rotate
+  - vec2.rotate90
+  - vec2.angleBetween
+  syntax: |
+    vec2.x
+    vec2.y
+
+    myVec = vec2( 2.5, 10.0 )
+
+    -- Supports operators:
+    --   v = vec2 + vec2
+    --   v = vec2 - vec2
+    --   v = vec2 * scalar
+    --   v = vec2 / scalar
+    --   v = -vec2
+    --   b = vec2 == vec2
+    --   print( vec2 )
+#---------------------------------
+      
+#---------------------------------
+# vec2.dot
+#---------------------------------       
+- category: method
+  description: This method returns the scalar dot product between two `vec2`
+    types
+  group: 2D Vector
+  id: vec2.dot
+  name: vec2.dot( v )
+  parameters:
+  - description: compute the dot product with this vec2 and v
+    name: v
+  related:
+  - vec2
+  returns: Dot product between this `vec2` and `v`
+  syntax: |
+    v1 = vec2( 1, 1 )
+    x = v1:dot( v )
+#---------------------------------
+      
+#---------------------------------
+# vec2.normalize
+#---------------------------------             
+- category: method
+  description: This method returns a normalized version of the vector
+  group: 2D Vector
+  id: vec2.normalize
+  name: vec2.normalize()
+  related:
+  - vec2
+  returns: Normalized version of this `vec2`
+  syntax: | 
+    v1 = vec2( 5, 5 )
+    v1 = v1:normalize()
+#---------------------------------
+      
+#---------------------------------
+# vec2.dist
+#---------------------------------             
+- category: method
+  description: This method returns the distance between two `vec2` types
+  group: 2D Vector
+  id: vec2.dist
+  name: vec2.dist( v )
+  parameters:
+  - description: compute the distance between this vec2 and v
+    name: v
+  related:
+  - vec2
+  returns: Distance between this `vec2` and `v`
+  syntax: |
+    v1 = vec2( 1, 1 )
+    x = v1:dist( vec2(2, 2) )
+#---------------------------------
+      
+#---------------------------------
+# vec2.distSqr
+#---------------------------------             
+- category: method
+  description: This method returns the squared distance between two `vec2`
+    types
+  group: 2D Vector
+  id: vec2.distSqr
+  name: vec2.distSqr( v )
+  parameters:
+  - description: compute the squared distance between this vec2 and v
+    name: v
+  related:
+  - vec2
+  returns: Squared distance between this `vec2` and `v`
+  syntax: |
+    v1 = vec2( 1, 1 )
+    x = v1:distSqr( vec2(2, 2) )
+#---------------------------------
+      
+#---------------------------------
+# vec2.len
+#---------------------------------             
+- category: method
+  description: This method returns the length of a `vec2`
+  group: 2D Vector
+  id: vec2.len
+  name: vec2.len()
+  related:
+  - vec2
+  returns: Length of this `vec2`
+  syntax: | 
+    v1 = vec2( 2, 1 )
+    x = v1:len()
+#---------------------------------
+      
+#---------------------------------
+# vec2.lenSqr
+#---------------------------------             
+- category: method
+  description: This method returns the squared length of a `vec2`
+  group: 2D Vector
+  id: vec2.lenSqr
+  name: vec2.lenSqr()
+  related:
+  - vec2
+  returns: Squared length of this `vec2`
+  syntax: |
+    v1 = vec2( 2, 1 )
+    x = v1:lenSqr()
+#---------------------------------
+      
+#---------------------------------
+# vec2.cross
+#---------------------------------             
+- category: method
+  description: This method returns the cross product between two `vec2` types
+  group: 2D Vector
+  id: vec2.cross
+  name: vec2.cross( v )
+  parameters:
+  - description: compute the cross product of this vec2 and v
+    name: v
+  related:
+  - vec2
+  returns: Cross product of this `vec2` and `v`
+  syntax: |
+    v1 = vec2( 1, 1 )
+    v2 = v1:cross( vec2(2, 2) )
+#---------------------------------
+      
+#---------------------------------
+# vec2.rotate
+#---------------------------------             
+- category: method
+  description: This method returns a rotated copy of a `vec2` type. The `angle`
+    is assumed to be radians.
+  group: 2D Vector
+  id: vec2.rotate
+  name: vec2.rotate( angle )
+  parameters:
+  - description: float, rotate this vector by `angle` in radians
+    name: angle
+  related:
+  - vec2
+  returns: Rotated version of this `vec2`
+  syntax: |
+    v1 = vec2( 1, 1 )
+    v1 = v1:rotate( math.rad(45) )
+#---------------------------------
+      
+#---------------------------------
+# vec2.rotate90
+#---------------------------------             
+- category: method
+  description: This method returns a copy of a `vec2` type, rotated 90 degrees.
+  group: 2D Vector
+  id: vec2.rotate90
+  name: vec2.rotate90()
+  related:
+  - vec2
+  returns: Rotated version of this `vec2`
+  syntax: |
+    v1 = vec2( 1, 1 )
+    v1 = v1:rotate90()
+#---------------------------------
+      
+#---------------------------------
+# vec2.angleBetween
+#---------------------------------             
+- category: method
+  description: This method returns the angle between this `vec2` and `v`
+    in radians.
+  group: 2D Vector
+  id: vec2.angleBetween
+  name: vec2.angleBetween( v )
+  parameters:
+  - description: compute the angle between this `vec2` and `v`
+    name: v
+  related:
+  - vec2
+  returns: Angle between `vec2` and `v` in radians
+  syntax: |
+    v1 = vec2( 1, 1 )
+    angle = math.deg( v1:angleBetween( vec2(5, 2) ) )
+#---------------------------------
+
+#---------------------------------
+# vec2.unpack
+#---------------------------------
+- category: method
+  description: >
+    This method returns each of a vector's components as separate values. It is useful
+    for inputting vector types into functions which accept scalar values.
+  examples:
+  - example: |
+      pos = vec2(20, 50)
+      translate( pos:unpack() )
+  group: 2D Vector
+  id: vec2.unpack
+  name: vec2.unpack()
+  related:
+  - vec2
+  returns: Two values x, y
+  syntax: |
+    v = vec2( 1, 2 )
+    x,y = v:unpack()
+#---------------------------------
+
+#---------------------------------
+# vec3
+#---------------------------------             
+- category: type
+  description: This type represents a 3D vector. Most mathematical operators such
+    as equality, addition, subtraction, multiplication and division are provided,
+    so you can use `vec3` data as you would normally use numerical types. In
+    addition there are a number of methods, such as `v:dot( vec3 )` that can
+    be called on vec3 types, please see the related items below.
+  group: 3D Vector
+  id: vec3
+  name: vec3
+  parameters:
+  - description: float, x dimension of this vector
+    name: x
+  - description: float, y dimension of this vector
+    name: y
+  - description: float, z dimension of this vector
+    name: z
+  related:
+  - vec3.dot
+  - vec3.normalize
+  - vec3.dist
+  - vec3.distSqr
+  - vec3.len
+  - vec3.lenSqr
+  - vec3.cross
+  syntax: |
+    vec3.x
+    vec3.y
+    vec3.z
+
+    myVec = vec3( 1.0, 2.0, 3.0 )
+    v = vec3(1,2,3) + vec3(3,2,1)
+    v = vec3(1,1,1) * 5
+#---------------------------------
+      
+#---------------------------------
+# vec3.dot
+#---------------------------------             
+- category: method
+  description: This method returns the scalar dot product between two `vec3`
+    types
+  group: 3D Vector
+  id: vec3.dot
+  name: vec3.dot( v )
+  parameters:
+  - description: compute the dot product with this vec3 and v
+    name: v
+  related:
+  - vec3
+  returns: Dot product between this `vec3` and `v`
+  syntax: |
+    v1 = vec3( 1, 1, 1 )
+    x = v1:dot( v )
+#---------------------------------
+      
+#---------------------------------
+# vec3.normalize
+#---------------------------------                   
+- category: method
+  description: This method returns a normalized version of the vector
+  group: 3D Vector
+  id: vec3.normalize
+  name: vec3.normalize()
+  related:
+  - vec3
+  returns: Normalized version of this `vec3`
+  syntax: |
+    v1 = vec3( 5, 5, 5 )
+    v1 = v1:normalize()
+#---------------------------------
+      
+#---------------------------------
+# vec3.dist
+#---------------------------------                   
+- category: method
+  description: This method returns the distance between two `vec3` types
+  group: 3D Vector
+  id: vec3.dist
+  name: vec3.dist( v )
+  parameters:
+  - description: compute the distance between this vec3 and v
+    name: v
+  related:
+  - vec3
+  returns: Distance between this `vec3` and `v`
+  syntax: |
+    v1 = vec3( 1, 1, 1 )
+    x = v1:dist( vec3(2, 2, 2) )
+#---------------------------------
+      
+#---------------------------------
+# vec3.distSqr
+#---------------------------------                   
+- category: method
+  description: This method returns the squared distance between two `vec3`
+    types
+  group: 3D Vector
+  id: vec3.distSqr
+  name: vec3.distSqr( v )
+  parameters:
+  - description: compute the squared distance between this vec3 and v
+    name: v
+  related:
+  - vec3
+  returns: Squared distance between this `vec3` and `v`
+  syntax: |
+    v1 = vec3( 1, 1, 1 )
+    x = v1:distSqr( vec3(2, 2, 2) )
+#---------------------------------
+      
+#---------------------------------
+# vec3.len
+#---------------------------------                   
+- category: method
+  description: This method returns the length of a `vec3`
+  group: 3D Vector
+  id: vec3.len
+  name: vec3.len()
+  related:
+  - vec3
+  returns: Length of this `vec3`
+  syntax: |
+    v1 = vec3( 2, 1, 0 )
+    x = v1:len()
+#---------------------------------
+      
+#---------------------------------
+# vec3.lenSqr
+#---------------------------------                   
+- category: method
+  description: This method returns the squared length of a `vec3`
+  group: 3D Vector
+  id: vec3.lenSqr
+  name: vec3.lenSqr()
+  related:
+  - vec3
+  returns: Squared length of this `vec3`
+  syntax: |
+    v1 = vec3( 2, 1, 0 )
+    x = v1:lenSqr()
+#---------------------------------
+      
+#---------------------------------
+# vec3.cross
+#---------------------------------                   
+- category: method
+  description: This method returns the cross product between two `vec3` types
+  group: 3D Vector
+  id: vec3.cross
+  name: vec3.cross( v )
+  parameters:
+  - description: compute the cross product of this vec3 and v
+    name: v
+  related:
+  - vec3
+  returns: Cross product of this `vec3` and `v`
+  syntax: | 
+    v1 = vec3( 1, 1 )
+    v2 = v1:cross( vec3(2, 2) )
+#---------------------------------
+
+#---------------------------------
+# vec3.unpack
+#---------------------------------
+- category: method
+  description: >
+    This method returns each of a vector's components as separate values. It is useful
+    for inputting vector types into functions which accept scalar values.
+  examples:
+  - example: |
+      myColor = vec3(255, 0, 255)
+      background( myColor:unpack() )
+  group: 3D Vector
+  id: vec3.unpack
+  name: vec3.unpack()
+  related:
+  - vec3
+  returns: Three values x, y, z
+  syntax: |
+    v = vec3( 1, 2, 3 )
+    x,y,z = v:unpack()
+#---------------------------------
+
+#---------------------------------
+# vec4
+#---------------------------------
+- category: type
+  description: This type represents a 4D vector. Most mathematical operators such
+    as equality, addition, subtraction, multiplication and division are provided,
+    so you can use `vec3` data as you would normally use numerical types. In
+    addition there are a number of methods, such as `v:dot( vec4 )` that can
+    be called on vec4 types, please see the related items below.
+  group: 4D Vector
+  id: vec4
+  name: vec4
+  parameters:
+  - description: float, x dimension of this vector
+    name: x
+  - description: float, y dimension of this vector
+    name: y
+  - description: float, z dimension of this vector
+    name: z
+  - description: float, w dimension of this vector
+    name: w
+  related:
+  - vec4.dot
+  - vec4.normalize
+  - vec4.dist
+  - vec4.distSqr
+  - vec4.len
+  - vec4.lenSqr
+  syntax: |
+    vec4.x
+    vec4.y
+    vec4.z
+    vec4.w
+
+    vec4.r
+    vec4.g
+    vec4.b
+    vec4.a
+
+    myVec = vec4( 1.0, 2.0, 3.0, 1.0 )
+    v = vec4(1,2,3,0) + vec4(3,2,1,1)
+    v = vec4(1,1,1,1) * 5
+#---------------------------------
+      
+#---------------------------------
+# vec4.dot
+#---------------------------------             
+- category: method
+  description: This method returns the scalar dot product between two `vec4`
+    types
+  group: 4D Vector
+  id: vec4.dot
+  name: vec4.dot( v )
+  parameters:
+  - description: compute the dot product with this vec4 and v
+    name: v
+  related:
+  - vec4
+  returns: Dot product between this `vec4` and `v`
+  syntax: |
+    v1 = vec4( 1, 1, 1, 1 )
+    x = v1:dot( v )
+#---------------------------------
+      
+#---------------------------------
+# vec4.normalize
+#---------------------------------                   
+- category: method
+  description: This method returns a normalized version of the vector
+  group: 4D Vector
+  id: vec4.normalize
+  name: vec4.normalize()
+  related:
+  - vec4
+  returns: Normalized version of this `vec4`
+  syntax: |
+    v1 = vec4( 5, 5, 5, 5 )
+    v1 = v1:normalize()
+#---------------------------------
+      
+#---------------------------------
+# vec4.dist
+#---------------------------------                   
+- category: method
+  description: This method returns the distance between two `vec4` types
+  group: 4D Vector
+  id: vec4.dist
+  name: vec4.dist( v )
+  parameters:
+  - description: compute the distance between this vec4 and v
+    name: v
+  related:
+  - vec4
+  returns: Distance between this `vec4` and `v`
+  syntax: |
+    v1 = vec4( 1, 1, 1, 1 )
+    x = v1:dist( vec4(2, 2, 2, 2) )
+#---------------------------------
+
+#---------------------------------
+# vec4.distSqr
+#---------------------------------                   
+- category: method
+  description: This method returns the squared distance between two `vec4`
+    types
+  group: 4D Vector
+  id: vec4.distSqr
+  name: vec4.distSqr( v )
+  parameters:
+  - description: compute the squared distance between this vec4 and v
+    name: v
+  related:
+  - vec4
+  returns: Squared distance between this `vec4` and `v`
+  syntax: |
+    v1 = vec4( 1, 1, 1, 1 )
+    x = v1:distSqr( vec4(2, 2, 2, 2) )
+#---------------------------------
+      
+#---------------------------------
+# vec4.len
+#---------------------------------                   
+- category: method
+  description: This method returns the length of a `vec4`
+  group: 4D Vector
+  id: vec4.len
+  name: vec4.len()
+  related:
+  - vec4
+  returns: Length of this `vec4`
+  syntax: |
+    v1 = vec4( 2, 1, 0, 0 )
+    x = v1:len()
+#---------------------------------
+      
+#---------------------------------
+# vec4.lenSqr
+#---------------------------------                   
+- category: method
+  description: This method returns the squared length of a `vec4`
+  group: 4D Vector
+  id: vec4.lenSqr
+  name: vec4.lenSqr()
+  related:
+  - vec4
+  returns: Squared length of this `vec4`
+  syntax: |
+    v1 = vec4( 2, 1, 0, 0 )
+    x = v1:lenSqr()
+#---------------------------------
+
+#---------------------------------
+# vec4.unpack
+#---------------------------------
+- category: method
+  description: >
+    This method returns each of a vector's components as separate values. It is useful
+    for inputting vector types into functions which accept scalar values.
+  examples:
+  - example: |
+      myColor = vec4(255, 0, 255, 255)
+      background( myColor:unpack() )
+  group: 4D Vector
+  id: vec4.unpack
+  name: vec4.unpack()
+  related:
+  - vec4
+  returns: Four values x, y, z, w
+  syntax: |
+    v = vec4( 1, 2, 3, 4 )
+    x,y,z,w = v:unpack()
+#---------------------------------
+
+#---------------------------------
+# matrix
+#---------------------------------                   
+- category: type
+  description: >
+    This type represents a 4x4 column-major matrix. This matrix type
+    is used to represent transformations in Codea, and can be used with functions
+    such as `modelMatrix()` and `viewMatrix()`. The matrix type supports
+    the following arithmetic operators: multiplication (between two matrices), multiplication
+    by scalar, division by scalar, equality, and element-wise addition and subtraction.
+    
+
+    Because this type is used to represent transformations it also provides a number of
+    3D transformation methods such as `matrix:translate(x,y,z)`, `matrix:rotate(angle,x,y,z)`.
+    See the related items for a full list.
+    
+
+    Constructing a matrix with
+    no parameters returns the identity matrix. Passing 16 numbers when constructing
+    a matrix will assign those values to the elements of the matrix. Individual
+    matrix elements can be accessed by their index, for example `m[1]` for
+    the first element and `m[16]` for the last element. Entries are defined
+    such that the x,y,z translation components are stored in elements 13, 14, and
+    15 respectively.
+  examples:
+  - example: |
+      matrix[x] = y
+      m1 = matrix( 1,2,3, ... ,16 )
+      m2 = matrix( 4,5,6, ... ,20 )
+      
+      -- Supports operators:
+      m = m1 * m2        
+      m = m1 + m2
+      m = m1 - m2
+      m = m1 * 10
+      m = m1 / 10
+      m = -m1
+      
+      checkEqual = m1 == m2
+      
+      print( m1 )
+  group: Matrix
+  id: matrix
+  name: matrix
+  parameters:
+  - description: float, an element of the matrix
+    name: element
+  related:
+  - modelMatrix
+  - matrix.rotate
+  - matrix.translate
+  - matrix.scale
+  - matrix.inverse
+  - matrix.transpose
+  - matrix.determinant
+  returns: A new matrix with the given elements
+  syntax: |
+    matrix[1] ... matrix[16]
+    m = matrix()
+    m = matrix(1, 2, 3, ... 16)
+    m = matrix1 * matrix2
+#---------------------------------
+      
+#---------------------------------
+# matrix.rotate
+#---------------------------------       
+- category: method
+  description: This method returns the matrix multiplied by a rotation matrix defining
+    a rotation of angle degrees around the x,y,z axis or (0,0,1) if no axis is given.
+  examples:
+  - example: |
+      m = matrix()
+      
+      --Rotate about 0,0,1
+      rotated = m:rotate(30)
+
+      --Rotate by a given axis
+      rotated= m:rotate(30, 1, 0, 0)
+  group: Matrix
+  id: matrix.rotate
+  name: matrix.rotate( m, r, x, y, z )
+  parameters:
+  - description: float, the rotation in degrees
+    name: angle
+  - description: float, the x component of the axis of rotation
+    name: axisX
+  - description: float, the y component of the axis of rotation
+    name: axisY
+  - description: float, the z component of the axis of rotation
+    name: axisZ
+  related:
+  - matrix
+  returns: A matrix which rotates m by the specified rotation
+  syntax: rotated = m:rotate( angle, axisX, axisY, axisZ )
+#---------------------------------
+      
+#---------------------------------
+# matrix.translate
+#---------------------------------     
+- category: method
+  description: This method returns the matrix multiplied by a translation matrix
+    defining a translation of x, y, z.
+  examples:
+  - example: |
+      m = matrix()
+      translated = m:translate(100,20,10)
+  group: Matrix
+  id: matrix.translate
+  name: matrix.translate( m, x, y, z )
+  parameters:
+  - description: float, the x component of translation
+    name: x
+  - description: float, the y component of translation
+    name: y
+  - description: float, optional (defaults to 0) the z component of translation"
+    name: z
+  related:
+  - matrix
+  returns: A matrix which translates m by the specified amount
+  syntax: translated = m:translate( x, y, z )
+#---------------------------------
+      
+#---------------------------------
+# matrix.scale
+#---------------------------------     
+- category: method
+  description: This method returns the matrix scaled by a translation matrix defining
+    a scaling to each axis.
+  examples:
+  - example: |
+      m = matrix()
+      s = m:scale(100,20,10)
+      
+      --Uniform scaling
+      s = m:scale(5)
+  group: Matrix
+  id: matrix.scale
+  name: matrix.scale( m, x, y, z )
+  parameters:
+  - description: float, the x component of scale, or the uniform scale if no other
+      components are given
+    name: x
+  - description: float, optional, the y component of scale
+    name: y
+  - description: "float, optional, defaults to 1 if x and y are both given, otherwise   x \u2013 the z component of scale"
+    name: z
+  related:
+  - matrix
+  returns: A matrix which scales m by the specified amount
+  syntax: scaled = m:scale( x, y, z )
+#---------------------------------
+      
+#---------------------------------
+# matrix.inverse
+#---------------------------------     
+- category: method
+  description: This method returns the inverse of the given matrix, if such an inverse
+    exists. If no inverse exists, the result is a matrix of NaN values. The inverse
+    of a matrix is a matrix such that m * mInv = I, where I is the identity matrix.
+  group: Matrix
+  id: matrix.inverse
+  name: matrix.inverse( m )
+  parameters:
+  - description: the matrix to invert
+    name: m
+  related:
+  - matrix
+  returns: A matrix which inverts m
+  syntax: inv = m:inverse()
+#---------------------------------
+      
+#---------------------------------
+# matrix.transpose
+#---------------------------------     
+- category: method
+  description: This method returns the transpose of the given matrix. The transpose
+    of a matrix is a matrix that is flipped on the major diagonal (ie, elements
+    1,6,11,16). For example element 2 and element 5 are swapped, etc.
+  group: Matrix
+  id: matrix.transpose
+  name: matrix.transpose( m )
+  parameters:
+  - description: the matrix to transpose
+    name: m
+  related:
+  - matrix
+  returns: A matrix which is the transpose of m
+  syntax: transposed = m:transpose()
+#---------------------------------
+      
+#---------------------------------
+# matrix.determinant
+#---------------------------------     
+- category: method
+  description: This method returns the determinant of the given matrix. This has
+    various uses for determining characteristics of a matrix, especially whether
+    it is invertible or not.
+  group: Matrix
+  id: matrix.determinant
+  name: matrix.determinant( m )
+  parameters: []
+  related:
+  - matrix
+  returns: A float equal to the determinant of m
+  syntax: det = m:determinant()
+
+
+#---------------------------------
+# quat
+#---------------------------------
+- category: type
+  description: This type represents a quaternion.
+  group: Quaternion
+  id: quat
+  name: quat
+  parameters:
+  - description: float, x dimension of this quaternion
+    name: x
+  - description: float, y dimension of this quaternion
+    name: y
+  - description: float, z dimension of this quaternion
+    name: z
+  - description: float, w dimension of this quaternion
+    name: w
+  related:
+  - quat.slerp
+  - quat.angles
+  - quat.angleAxis
+  - quat.eulerAngles
+  - quat.lookRotation
+  - quat.fromToRotation
+  syntax: |
+    quat.x
+    quat.y
+    quat.z
+    quat.w
+
+    myQuat = quat.eulerAngles(45,45,45)
+#---------------------------------
+
+#---------------------------------
+# quat.eulerAngles
+#---------------------------------             
+- category: method
+  description: Creates a new quaternion using 3 euler angles given in degrees.
+  group: Quaternion
+  id: quat.eulerAngles
+  name: quat.eulerAngles( x, y, z )
+  parameters:
+  - description: float, the amount of pitch in degrees
+    name: x
+  - description: float, the amount of roll in degrees
+    name: y
+  - description: float, the amount of yaw in degrees
+    name: z
+  related:
+  - quat
+  returns: The resulting quaternion
+  syntax: |
+    q = quat.eulerAngles(45,0,45)    
+#---------------------------------
+
+#---------------------------------
+# quat.angleAxis
+#---------------------------------             
+- category: method
+  description: Creates a new quaternion using an angle and axis.
+  group: Quaternion
+  id: quat.angleAxis
+  name: quat.angleAxis( angle, axis )
+  parameters:
+  - description: float, the amount of rotation about the axis in degrees
+    name: angle
+  - description: vec3, the axis to rotate around
+    name: axis
+  related:
+  - quat
+  returns: The resulting quaternion
+  syntax: |
+    q = quat.angleAxis(45, vec3(0,0,1))
+#---------------------------------
+
+#---------------------------------
+# quat.lookRotation
+#---------------------------------             
+- category: method
+  description: Creates a new quaternion that 'looks' in a specified direction.
+  group: Quaternion
+  id: quat.lookRotation
+  name: quat.lookRotation( forward, up )
+  parameters:
+  - description: vec3, the direction to look at
+    name: forward
+  - description: vec3, the upwards direction used to orient the quaternion
+    name: up
+  related:
+  - quat
+  returns: The resulting quaternion
+  syntax: |
+    q = quat.lookRotation( vec3(0,0,1), vec3(0,1,0) )
+#---------------------------------
+
+#---------------------------------
+# quat.fromToRotation
+#---------------------------------             
+- category: method
+  description: Creates a new quaternion that rotates between two directions.
+  group: Quaternion
+  id: quat.fromToRotation
+  name: quat.fromToRotation( from, to )
+  parameters:
+  - description: vec3, the start direction
+    name: from
+  - description: vec3, the the end direction
+    name: to
+  related:
+  - quat
+  returns: The resulting quaternion
+  syntax: |
+    q = quat.fromToRotation( vec3(0,0,1), vec3(1,0,0) )
+#---------------------------------
+
+#---------------------------------
+# quat.slerp
+#---------------------------------             
+- category: method
+  description: Performs spherical interpolation (slerp) from this quaternion to another.
+  group: Quaternion
+  id: quat.slerp
+  name: quat.slerp( q, t )
+  parameters:
+  - description: float, the amount of interpolation to perform
+    name: t
+  related:
+  - quat
+  returns: The spherically interpolated quaternion
+  syntax: |
+    q1 = quat.eulerAngles(0,0,0)
+    q2 = quat.eulerAngles(0,0,90)
+    q3 = q1:slerp(p2, 0.5)
+#---------------------------------
+
+#---------------------------------
+# quat.angles
+#---------------------------------             
+- category: method
+  description: Extracts the euler angles from a quaternion and returns them as a vec3 in degrees.
+  group: Quaternion
+  id: quat.angles
+  name: quat.angles()
+  related:
+  - quat
+  returns: vec3, the euler angles for this quaternion in degrees
+  syntax: |
+    q = quat.eulerAngles(20,30,40)
+    angles = q:angles()    
+#---------------------------------
+
+#---------------------------------
+# quat.normalized
+#---------------------------------
+- category: method
+  description: Returns a normalized copy of this quaternion
+  group: Quaternion
+  id: quat.normalized
+  name: quat.normalized()
+  related:
+  - quat
+  - quat.normalize
+  returns: quat, a normalized version of this quaternion
+  syntax: |
+    q = quat.eulerAngles(20,30,40)
+    nq = q:normalized()
+#---------------------------------
+
+#---------------------------------
+# quat.normalize
+#---------------------------------
+- category: method
+  description: Normalize this quaternion
+  group: Quaternion
+  id: quat.normalize
+  name: quat.normalize()
+  related:
+  - quat
+  - quat.normalized
+  syntax: |
+    q = quat.eulerAngles(20,30,40)
+    q:normalize()
+#---------------------------------
+
+#---------------------------------
+# quat.conjugate
+#---------------------------------
+- category: method
+  description: Return the conjugation of this quaternion
+  group: Quaternion
+  id: quat.conjugate
+  name: quat.conjugate()
+  related:
+  - quat
+  returns: quat, a conjugated version of this quaternion
+  syntax: |
+    q = quat.eulerAngles(20,30,40)
+    cq = q:conjugate()
+#---------------------------------
+
+#---------------------------------
+# quat.len
+#---------------------------------
+- category: method
+  description: Return the length of this quaternion
+  group: Quaternion
+  id: quat.len
+  name: quat.len()
+  related:
+  - quat
+  - quat.lenSqr
+  returns: float, the length of this quaternion
+  syntax: |
+    q = quat.eulerAngles(20,30,40)
+    len = q:len()
+#---------------------------------
+
+#---------------------------------
+# quat.lenSqr
+#---------------------------------
+- category: method
+  description: Return the squared length of this quaternion
+  group: Quaternion
+  id: quat.lenSqr
+  name: quat.lenSqr()
+  related:
+  - quat
+  - quat.len
+  returns: float, the squared length of this quaternion
+  syntax: |
+    q = quat.eulerAngles(20,30,40)
+    len2 = q:lenSqr()
+#---------------------------------
+

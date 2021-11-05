@@ -1,0 +1,2375 @@
+id: graphics
+name: Graphics
+subtitle: Drawing Shapes, Styles and Positioning
+ordering:
+    - Overview
+    - Drawing
+    - Transform
+    - Advanced Transform
+    - Style
+    - Text Metrics
+    - Transform Management
+    - Style Management
+    - Images
+    - Drawing Into Images
+    - Assets
+    - Generators
+    - Setting Clipping Bounds
+    - Constants
+    - Variables
+    - Camera Input
+functions:
+
+#---------------------------------
+# Codea Overview
+#---------------------------------
+- id: codeaOverview
+  category: overview
+  description: |
+    When you begin a new project in Codea you'll notice that it consists of a tab called `Main` and some template code. Your project can consist of several tabs, the initial one is always called `Main`. If you add more files they will be listed across the top.
+    
+        function setup()
+            print(\"Hello World!\")
+        end
+        
+        function draw()
+            background(0,0,0)
+        
+            -- Do your drawing here
+        end
+    
+    
+    This is the framework that your project will use to run. There are two functions defined for you initially: `setup()` and `draw()`.
+    
+    
+    `setup()` and `draw()` are executed by Codea when you press the play button to run your project. The `setup()` function is called once, at the start, and then the `draw()` function is called repeatedly (60 times per second, to be exact). In `setup()` Codea expects you to set up your initial program state, and in `draw()` you can tell Codea to render graphics onto the screen, update your program state over time, and so on.
+    
+    
+    In the next two sections we will cover these functions in detail.
+  group: Overview    
+  name: How Codea Draws
+  related: [draw, setup]
+#---------------------------------
+
+#---------------------------------
+# Assets Overview
+#---------------------------------
+- id: assetsOverview
+  category: overview
+  description: |
+    While Codea lets you draw lines and shapes, it's far more interesting to use resources like images, sounds, and 3D models. That's where assets come in. When you call a function like `sprite` you need to give it an image to draw. There are a few ways to do this, the easiest is to type the code `sprite()` and then tap on the highlighted parentheses `()`. This will present the asset picker so you can visually select an image
+    
+    
+    When you do this, you'll notice that the image you select is referred to with an *asset key*, it might look something like `asset.builtin.Planet_Cute.Icon`. An *asset key* describes the location of a file on your device, and Codea actually checks that the file exists while you are writing your code. If you type an asset key that does not exist, you will notice that Codea puts a red marker next to your code informing you that the specified asset can't be found
+    
+    
+    **Specifying Assets**
+    
+    
+    Start by typing the word `assets` in your code followed by a dot (`.`), you will see the list of autocomplete suggestions appear, and these will refer to real files and folders on your device
+    
+    
+    **Asset Locations**
+    
+    
+    *Project*: to specify assets in your current project, just type `asset.AssetName` where "AssetName" is a file or folder in your project
+    
+    
+    *Documents*: to specify assets in Codea's documents folder, type `asset.documents.AssetName`
+    
+    
+    *Built-in*: to specify assets from Codea's built-in collection of sprites, sounds and shaders, use `asset.builtin.AssetName`
+    
+    
+    **Creating New Assets**
+    
+    
+    When you need to tell Codea where to save a file, you can use the Lua concatenation operator (`..`) to create an asset key to a non-existent path. For example:
+    
+    
+        saveText(asset.documents .. "readme.txt", "Hello World")
+        
+        
+    The code `asset.documents .. "readme.txt"` tells Codea to create a path in your documents folder pointing to file called "readme.txt"
+    
+    
+    **Enumerating Assets**
+    
+    
+    To get the number of files in a folder you can use the Lua length operator (`#`), some examples:
+    
+    
+        -- Number of files in your project
+        print(#assets)
+        
+        -- Number of files in documents
+        print(#asset.documents)
+        
+        -- Number of files in a folder in documents
+        print(#asset.documents.SomeFolder)
+        
+        
+    To list all assets in a folder you can append `.all` onto the folder path to return an array of the folder contents as asset keys, e.g.,
+    
+    
+        -- Get all files in the current project
+        -- and iterate over them, printing their
+        -- path
+        
+        for i,v in pairs(asset.all) do
+            print(i, v.path)
+        end
+    
+    
+    **Special Cases**
+    
+    
+    Codea tries to surface as many of the assets from your files into your code as it can, but sometimes you'll have files named with special characters and these won't translate into valid variable names in Lua. To access the raw contents of an asset library you can use square bracket notation, for example: `asset.documents["My File (2).png"]`. Codea won't be able to check whether the asset exists or offer autocomplete for this syntax
+    
+    
+    One other special case occurs if you have multiple files with identical names, but different file extensions. In this case Codea will offer them as static assets using `_ext` for the extension to differentiate. For example, `asset.MyObject_png` and `asset.MyObject_obj` refer to "MyObject.png" and "MyObject.obj" in your Codea project respectively
+    
+    
+    **Asset Library Tracking**
+    
+    
+    Finally, you can tell Codea to monitor a folder for changes by assigning a function to the `updated` property of the specified folder. Note that this only works on asset paths to folders, not to individual files. For example:
+    
+    
+        -- Track files in a folder in
+        -- documents for changes
+        
+        asset.documents.MyFolder.updated = function (lib)
+            print("Number of files " .. #lib)
+        end
+        
+        -- Track files in your project
+        
+        asset.updated = function (lib)
+            print("Project files modified", lib)
+        end
+  group: Overview
+  name: Using Assets
+  related: [assets, assets.key, sprite, saveText]
+#---------------------------------
+
+#---------------------------------
+# Drawing Overview
+#---------------------------------
+- id: draw
+  category: event
+  description: |
+    When you press the play button, the `draw()` function is repeatedly executed by Codea. Codea tries to execute the `draw()` function 60 times per second - if it can. Codea can't guarantee that your `draw()` function will be called 60 times per second (it may slow down if your project performs a lot of computation, or creates highly complex drawing).
+    
+    
+        function draw()
+            -- Set the background color to blueish
+            background(100,120,180)
+            
+            -- Set the fill color to red
+            fill(255,0,0)
+            
+            -- Set a wide outline
+            strokeWidth(5)
+            
+            -- Set the outline color to white
+            stroke(255)
+            
+            -- Draw a red circle with a white outline
+            -- In the center of the screen
+            ellipse( WIDTH/2, HEIGHT/2, 200 )
+        end
+        
+    Note that the above code will run 60 times every second. That is, you are telling Codea to paint the background blue and draw a red circle with a white outline 60 times per second, from scratch. It does this so that you can create smooth motion by changing your program state over time, and updating your drawing code to reflect the new state. For example, you might make the circle bounce on the ground by changing its Y-position (the second parameter to `ellipse()`) every frame.
+  group: Overview
+  name: function draw()
+  related: [setup]
+#---------------------------------
+  
+#---------------------------------
+# Setup Overview
+#---------------------------------
+- id: setup
+  category: event
+  description: |
+    When you press the play button Codea will call the `setup()` function once, before it begins calling the `draw()` function. In here you can perform any once-off computations, set up program state, set the display mode, and do things that you don't need to do every frame. For example, the `setup()` function below creates a global variable controlled by a slider. This variable is then used in the `draw()` function to control the Y-position of a circle.
+    
+        function setup()
+            displayMode(STANDARD)
+            parameter("YPosition", 0,
+                      HEIGHT, HEIGHT/2)
+        end
+        
+        function draw()
+            background(0)
+            fill(255,0,0)
+            ellipse( WIDTH/2,
+                     YPosition,
+                     200 )
+        end
+        
+  group: Overview
+  name: function setup()
+  related: [draw]
+#---------------------------------
+  
+#---------------------------------
+# clip()
+#---------------------------------    
+- id: clip
+  category: function
+  description: >
+    Constrains all drawing performed after this function call to the
+    rectangle specified by `x`, `y`, `width`, `height`. Any
+    drawing that occurs outside the bounds will not be visible.
+    
+    
+    This can be used to make split-screen multiplayer games, for example. 
+    When called with zero arguments `clip()` disables the clipping rectangle,
+    allowing drawing to occur anywhere on the screen.
+  group: Setting Clipping Bounds    
+  name: clip( x, y, width, height )
+  parameters:
+  - description: integer, x coordinate of the lower-left corner of the clipping
+      rectangle
+    name: x
+  - description: integer, y coordinate of the lower-left corner of the clipping
+      rectangle
+    name: y
+  - description: integer, width of the clipping rectangle
+    name: width
+  - description: integer, height of the clipping rectangle
+    name: height
+  syntax: |
+    clip( x, y, width, height )
+    clip() --Disables clipping
+#---------------------------------  
+      
+#---------------------------------
+# setContext()
+#---------------------------------      
+- id: setContext
+  category: function
+  description: >
+    This call causes all drawing operations to take place on the specified
+    image instead of on-screen. Drawing commands such as `ellipse`, `sprite`
+    and `rect` will render into the image given as an argument to `setContext()`.
+    
+    
+    Calling `setContext()` with no arguments causes all drawing operations to return
+    to their regular on-screen drawing functionality. Because Codea uses pre-multiplied
+    drawing, any image passed to `setContext()` will have its premultiplied
+    flag set to true.
+    
+
+    An optional final argument `useDepth` can be specified to tell `setContext` to
+    also allocate a depth buffer for the image. By default `setContext` will not.
+    Allocating a depth buffer impacts performance, but allows rendering of 3D content
+    into an image.
+  examples:
+  - example: |
+      -- Creates an image of an ellipse and rect
+      function createImage()
+          myImage = image(400,400)
+          
+          setContext( myImage )
+          ellipse(200,   200, 200)
+          rect(0, 0, 100, 100)    
+          setContext()
+          
+          return myImage
+      end
+  group: Drawing Into Images    
+  name: setContext( image )
+  parameters:
+  - description: image, all drawing operations will occur on this image instead
+      of on screen
+    name: image
+  - description: boolean, whether a depth buffer should be created for this image, defaults
+      to false if not specified
+    name: useDepth
+  related: [image]
+  syntax: |
+    setContext()
+    setContext( image )
+    setContext( image, useDepth )
+    
+#---------------------------------
+# noise()
+#---------------------------------      
+- id: noise
+  category: function
+  description: >
+    Returns a Perlin noise value in the range -1.0 to 1.0 sampled at
+    location `x`, `y`, `z`. Any parameters not provided to this function
+    are treated as zero.
+  group: Generators    
+  name: noise( x, y, z )
+  parameters:
+  - description: float, x location of the sample
+    name: x
+  - description: float, y location of the sample
+    name: y
+  - description: float, z location of the sample
+    name: z
+  returns: Perlin noise value from -1.0 to 1.0 at the given location.
+  syntax: |
+    noise( x )
+    noise( x, y )
+    noise( x, y, z )
+
+#---------------------------------
+# background()
+#---------------------------------                
+- id: background
+  category: function
+  description: >
+    Clears the background to the specified color. You should generally
+    call this at the start of your `draw()` function in order to clear the
+    contents of the previous frame.
+  examples:
+  - example: |
+      function draw()
+          -- Dark blueish background
+          background(0, 50, 70)
+          
+          -- Do some drawing
+      end
+  group: Drawing    
+  name: background( red, green, blue )
+  parameters:
+  - description: int from `0` to `255`, specifies value between white and black
+    name: gray
+  - description: int from `0` to `255`, specifies opacity of the background
+    name: alpha
+  - description: int from `0` to `255`, specifies red amount of the background
+    name: red
+  - description: int from `0` to `255`, specifies green amount of the background
+    name: green
+  - description: int from `0` to `255`, specifies blue amount of the background
+    name: blue
+  - description: a value of the color datatype
+    name: color
+  related: [color, backingMode]
+  syntax: |
+    background( gray )
+    background( gray, alpha )
+    background( red, green, blue )
+    background( red, green, blue, alpha )
+    background( color )
+#---------------------------------
+
+#---------------------------------
+# ellipse()
+#---------------------------------       
+- id: ellipse
+  category: function
+  description: >
+    Draws an ellipse centered at `x`, `y` with horizontal and vertical
+    dimensions specified by `width` and `height`. The `ellipseMode()`
+    function sets how these parameters are interpreted. Use `fill()` to set
+    the color of an ellipse and `stroke()` to set its outline color.
+    
+    
+    If only the `width` is specified, this is treated as the ellipse
+    `diameter` (or `radius`, if `ellipseMode( RADIUS )` is used).
+    
+
+    The interpretation
+    of an ellipse's `x`, `y`, `width` and `height` parameters can be specified
+    using the `ellipseMode()` function. `ellipseMode()` is set to `CENTER`
+    by default.
+  group: Drawing    
+  name: ellipse( x, y, width, height )
+  parameters:
+  - description: x-coordinate of the ellipse
+    name: x
+  - description: y-coordinate of the ellipse
+    name: y
+  - description: width of the ellipse
+    name: width
+  - description: height of the ellipse
+    name: height
+  related: [ellipseMode, fill, stroke]
+  syntax: |
+    ellipse( x, y, diameter )
+    ellipse( x, y, width, height )      
+#---------------------------------
+
+#---------------------------------
+# rect()
+#---------------------------------       
+- id: rect
+  category: function
+  description: >
+    Draws a rectangle with its lower-left corner positioned at `x`,
+    `y` and sized at `width`, `height`. Use `fill()` to set the color
+    of a rectangle and `stroke()` to set the outline color. 
+    
+    
+    The interpretation
+    of a rectangle's `x`, `y`, `width` and `height` parameters can be specified
+    using the `rectMode()` function. `rectMode()` is set to `CORNER`
+    by default.
+  group: Drawing    
+  name: rect( x, y, width, height )
+  parameters:
+  - description: x-coordinate of the lower-left corner
+    name: x
+  - description: y-coordinate of the lower-left corner
+    name: y
+  - description: width of the rectangle
+    name: width
+  - description: height of the rectangle
+    name: height
+  related: [rectMode, fill, stroke]
+  syntax: rect( x, y, width, height )
+   
+#---------------------------------
+
+#---------------------------------
+# sprite()
+#---------------------------------         
+- id: sprite
+  category: function
+  description: >
+    Draws the sprite specified by `asset`. A sprite is a a bitmap graphic (such as a character,
+    or a space ship). The asset specifies the location of the file to use for drawing
+    
+    
+    Alternatively, an `image` can be provided in instead of an asset to draw that
+    image. `CAMERA` may also by provided in order to draw the current capture
+    source video input.
+  
+
+    By default the x and y parameters set the location
+    of the center of the sprite, the origin mode can be set using the `spriteMode()`
+    function. The last two parameters are optional and set the width and height
+    in pixels, if these are not specified the sprite will be rendered at the pixel
+    dimensions of its graphic. Sprites can be tinted with the `tint()` function.
+  examples:
+  - example: |
+      background(127, 127, 127, 255)
+      sprite(asset.builtin.Planet_Cute.Character_Boy,
+             WIDTH / 2, HEIGHT / 2)
+    image: media/sprite_ex1.png
+  - example: |
+      background(127, 127, 127, 255)
+      tint(255, 0, 0)
+      sprite(asset.builtin.Planet_Cute.Character_Boy,
+             WIDTH / 2, HEIGHT / 2)
+    image: media/sprite_ex2.png
+  - example: |
+      sprite(CAMERA, 0, 0)
+  group: Drawing
+  name: sprite( asset, x, y )
+  parameters:
+  - description: |
+      asset key of the sprite to use, in the following format:
+          `asset.MyFileName`
+      or
+          `CAMERA`
+    name: asset
+  - description: image to draw onto the screen
+    name: image
+  - description: x-coordinate of the center of the sprite (this can be changed with `spriteMode`)
+    name: x
+  - description: y-coordinate of the center of the sprite (this can be changed with `spriteMode`)
+    name: y
+  - description: optional width of the sprite in pixels
+    name: width
+  - description: optional height of the sprite in pixels. If `width` is specified
+      and `height` is not, then `height` is automatically computed to
+      preserve the aspect ratio of the image.
+    name: height
+  related: [assetsOverview, spriteMode, tint, noTint, image, CAMERA]
+  syntax: |
+    sprite( asset, x, y )
+    sprite( asset, x, y, width )
+    sprite( asset, x, y, width, height )
+
+    sprite( image, x, y )
+    sprite( image, x, y, width )
+    sprite( image, x, y, width, height )      
+#---------------------------------
+
+#---------------------------------
+# text()
+#---------------------------------               
+- id: text
+  category: function
+  description: >
+    Draws text at the given `x`, `y` location. You can set
+    the font used by `text()` with the `font()` function. Text appearance
+    can be further configured by using the `fontSize()` and `fill()` functions.
+  
+
+    You can change the alignment and wrapping of text by using `textAlign()` and
+    `textWrapWidth()`. If `textWrapWidth()` is set to 0 (the default)
+    text will be drawn on one line. If `textWrapWidth()` is set to a value
+    greater than 0 the text will word-wrap if it exceeds the width specified by
+    `textWrapWidth()`
+    
+
+    By default the x and y parameters set the
+    location of the center of the text, the origin mode can be set using the `textMode()`
+    function. Text color can be changed with the `fill()` function.
+    
+
+    If you need to get the dimensions of a string in the current style, see the 
+    `textSize` function documentation.
+  examples:
+  - example: |
+      background(100, 120, 160)
+      font("Georgia")
+      fill(255)
+      fontSize(20)
+      textWrapWidth(70)
+      text("Hello World!", WIDTH/2, HEIGHT/2)
+    image: media/text_ex1.png
+  group: Drawing    
+  name: text( string, x, y )
+  parameters:
+  - description: the text string that you would like to draw onto the screen
+    name: string
+  - description: x-coordinate of the center of the text (this can be changed with
+      `textMode`)
+    name: x
+  - description: y-coordinate of the center of the text (this can be changed with
+      `textMode`)
+    name: y
+  related: [font, fill, fontSize, textMode, textAlign, textWrapWidth, textSize]
+  syntax: text( string, x, y )
+#---------------------------------
+
+#---------------------------------
+# line()
+#---------------------------------      
+- id: line
+  category: function
+  description: >
+    Draws a line between the two points specified by `x1,y1` and
+    `x2,y2`. A line's color can be set with the `stroke()` function and
+    its width can be set with the `strokeWidth()` function. A line's cap style
+    can be changed with the `lineCapMode()` function. Note that line cap modes
+    only take effect when drawing with the rendering mode set to `smooth()`.
+    When using `noSmooth()`, lines will be rendered using square end caps.
+  examples:
+  - example: |
+      function draw()
+          background(128)
+          stroke(255)
+          line(10, 10, 80, 80)
+      end
+    image: media/line_ex1.png
+  group: Drawing    
+  name: line( x1, y1, x2, y2 )
+  parameters:
+  - description: x-coordinate of the first point
+    name: x1
+  - description: y-coordinate of the first point
+    name: y1
+  - description: x-coordinate of the second point
+    name: x2
+  - description: y-coordinate of the second point
+    name: y2
+  related: [lineCapMode, stroke, strokeWidth, smooth, noSmooth]
+  syntax: line( x1, y1, x2, y2 )
+#---------------------------------
+
+#---------------------------------
+# image()
+#---------------------------------     
+- id: image
+  category: type
+  description: >
+    This type represents a 2D raster image, pixels can be set with image:set(x,
+    y, color) and read with image:get(x, y). Images and sub-rectangles can be copied
+    with image:copy(). Draw images onto the screen using sprite(image,x,y). See
+    the relevant documentation pages for more details.You can access the width
+    or the height of an image through its width and height properties.
+  
+
+    The `image.premultiplied` flag allows you to specify whether the image was
+    created with premultiplied alpha. Generally, for images you create yourself
+    using `image:set()`, you'll want this set to `false` (the default).
+    For images used with `setContext()` you will want this set to `true`.
+    Note that using an image with `setContext()` will automatically set its
+    premultiplied flag to `true`.The constructor can alternatively take
+    png or jpeg encoded binary data which it will decode and use to construct the
+    image. Using this will enable premultiplied alpha, and the encoded data is assumed
+    to be premultiplied.
+    
+
+    `image(CAMERA)` can be used to capture the current frame from the camera into a
+    static image. This is a fairly slow operation and should not be done every frame.
+    If there is no camera frame available (due to the capture source not being available, 
+    or still being initialized), an image with width and height of 0 is created.
+
+  examples:
+  - example: |
+      -- Create a 400x400 pixel image
+      myImage = image(400, 400)
+
+      -- Set a pixel
+      myImage:set(10,10,128,128,128,255)
+
+      -- Get a pixel
+      r,g,b,a = myImage:get(10,10)
+  - example: |
+      img = image(CAMERA)
+  group: Images    
+  name: image
+  parameters:
+  - description: CAMERA constant, to copy the frame from the current capture source
+    name: source
+  - description: integer, the width of the image in pixels
+    name: width
+  - description: integer, the height of the image in pixels
+    name: height
+  - description: boolean, tells Codea to render this image as a premultiplied image.
+      The default is false.
+    name: premultiplied
+  - description: string, a sequence of bytes representing the encoded jpeg or png
+      image data.
+    name: data
+  related: [image.get, image.set, image.copy, sprite, setContext, CAMERA]
+  returns: The newly created image of given width and height
+  syntax: |
+    image( width, height )
+    image.width
+    image.height
+    image(data)
+    image(source)
+#---------------------------------
+
+#---------------------------------
+# image.get()
+#---------------------------------       
+- id: image.get
+  category: method
+  description: This method returns the red, green, blue and alpha components of
+    the pixel located at x, y in the image.
+  examples: 
+  - example: |
+      r,g,b,a = myImage:get( 15, 15 )
+      r,g,b = myImage:get( 25, 25 )
+  group: Images    
+  name: image.get( x, y )
+  parameters:
+  - description: integer, x location of the pixel to query
+    name: x
+  - description: integer, y location of the pixel to query
+    name: y
+  related: [image, image.set]
+  returns: >
+    Four values: red, green, blue and alpha representing the color of the
+    pixel at `x`, `y`. The values are in the range 0 to 255.
+  syntax: image.get( x, y )
+#---------------------------------
+
+#---------------------------------
+# image.set()
+#---------------------------------     
+- id: image.set 
+  category: method
+  description: This method sets the red, green, blue and alpha components of the
+    pixel located at x, y. If no alpha parameter is given, it is assumed to be 255.
+  examples:
+  - example: myImage:set( 15, 15, color(20,30,40,255) )
+  - example: myImage:set( 15, 15, 20, 30, 40, 255)
+  group: Images    
+  name: image.set( x, y, color )
+  parameters:
+  - description: integer, x location of the pixel to query. 1 is the left most column.
+      Must be less than or equal to the image.width value.
+    name: x
+  - description: integer, y location of the pixel to query. 1 is the bottom row.
+      Must be less than or equal to the image.height value.
+    name: y
+  - description: color object, the color to set the pixel to
+    name: color
+  - description: integer, the red, green, blue and alpha value to set the pixel
+      to. Between `0` and `255`.
+    name: r, g, b, a
+  related: [image, image.set, color]
+  syntax: |
+    image.set( x, y, color )
+    image.set( x, y, r, g, b, a)
+    image.set( x, y, r, g, b)
+#---------------------------------
+
+#---------------------------------
+# image.copy()
+#---------------------------------       
+- id: image.copy
+  category: method
+  description: This method will copy the pixels in one image into a new image. If
+    no parameters are given, it will copy the whole image, otherwise it will copy
+    the defined subregion. If the region is outside of the image, it will be adjusted
+    to select a valid region from the image. If the rectangle is completely outside
+    of the image, an error will occur.
+  examples:
+  - example: newImage = myImage:copy()
+  - example: newImage = myImage:copy(20,40,100,100)
+  group: Images    
+  name: image.copy( x, y, w, h )
+  parameters:
+  - description: integer, x location of the leftmost pixels of the copy region.
+    name: x
+  - description: integer, y location of the topmost pixels of the copy region
+    name: y
+  - description: positive integer, width in pixels of the copy region
+    name: width
+  - description: positive integer, height in pixels of the copy region
+    name: height
+  related:
+  - image
+  - image.set
+  returns: The newly created image with a copy of the given image or a subregion
+    of it.
+  syntax: |
+    image:copy()
+    image:copy(x, y, width, height)
+#---------------------------------
+
+#---------------------------------
+# translate()
+#---------------------------------    
+- id: translate
+  category: function
+  description: Translates all subsequent drawing operations by the specified
+    `x` and `y` values. Translations are cumulative, so a call to `translate(
+    50, 0 )` followed by a call to `translate( 10, 10 )` will translate
+    all subsequent drawing operations by `60, 10`. Translate can take an optional
+    `z` parameter to specify depth.
+  group: Transform    
+  name: translate( x, y )
+  parameters:
+  - description: amount of horizontal translation, in pixels
+    name: x
+  - description: amount of vertical translation, in pixels
+    name: y
+  - description: amount of depth translation, in pixels
+    name: z
+  related: [rotate, scale, pushMatrix, popMatrix, resetMatrix]
+  syntax: |
+    translate( x, y )
+    translate( x, y, z )
+#---------------------------------
+
+#---------------------------------
+# assets.key
+#---------------------------------
+- id: assets.key
+  category: type
+  description: This type represents a file (not folder) on your device. Codea creates an object of this type when you specify an asset using the `asset.FileName` syntax in your code
+  examples:
+  - example: |
+      -- Get the Main.lua file as an asset
+      local mainFile = asset.Main
+      
+      print(mainFile.name)
+      print(mainFile.path)
+      
+      -- Print a description of the asset key
+      print(mainFile)
+  group: Assets
+  name: assets.key
+  parameters:
+  - description: string, the name of this file, including its extension
+    name: name
+  - description: string, the full path to this file
+    name: path
+  - description: string, the file extension for this file
+    name: ext
+  - description: the type of this file, can be `SPRITES`, `MODELS`, `SOUNDS`, `MUSIC`, `TEXT`, `SHADERS`
+    name: type
+  related: [assets, assetsOverview]
+  syntax: asset.FileName
+#---------------------------------
+
+#---------------------------------
+# assets
+#---------------------------------
+- id: assets
+  category: type
+  description: >
+      This type represents a folder (not file) on your device. Codea creates an object of this type when you specify an asset using the `asset.FolderName` syntax in your code, folders can have nested subfolders and you can specify them by using `.SubFolder` to refer to them (where "SubFolder" is the name of your sub folder)
+  examples:
+  - example: |
+      -- Get the Documents folder as an asset library
+      local docs = asset.documents
+      
+      -- Number of files in documents
+      print(#docs)
+      
+      -- Path to documents folder
+      print(docs.path)
+      
+      -- Get a table with all the contents
+      local allDocs = docs.all
+      
+      -- Get notified of updates to documents
+      asset.documents.updated = function (lib)
+          print("Docs updated!")
+      end
+      
+      -- Create an asset key pointing to a new file
+      local myFile = docs .. "newFile.txt"
+  group: Assets
+  name: assets
+  parameters:
+  - description: string, the full path to this folder
+    name: path
+  - description: string, the type of this folder (if it represents a bundle type). Can be `PROJECT` or `SHADERS`
+    name: type
+  - description: string, the file extension of this folder, will be an empty string unless the folder has a specific extension
+    name: ext
+  - description: table, a table with every file and folder in this folder, the table is keyed by file name and the values are either `assets.key` (files) or `assets` (folders)
+    name: all
+  - description: >
+      function, assign a function to this property to be notified when this folder's contents have been modified, your function will be passed one argument which is an `assets` object of the folder being monitored
+    name: updated
+  related: [assets.key, assetsOverview]
+  syntax: asset.FolderName
+#---------------------------------
+
+#---------------------------------
+# rotate()
+#---------------------------------        
+- category: function
+  description: >
+    Specifies an amount of rotation (in degrees) to apply to all subsequent
+    drawing. All subsequent drawing functions will be rotated by angle value specified
+    in this function. Rotations are cumulative, so calling `rotate(30)` followed
+    by `rotate(20)` has the same effect as `rotate(50)`.
+  
+
+    `rotate()` can also be called with a specific axis, defined by the `x`, `y`, `z` parameters.
+    This allows rotation to occur on an arbitrary axis for 3D effects. By default
+    the axis is (0, 0, 1), this means that objects rotate about the axis pointing
+    toward the viewer.
+  group: Transform
+  id: rotate
+  name: rotate( angle )
+  parameters:
+  - description: amount of rotation in degrees
+    name: angle
+  - description: float, x value for the axis of rotation
+    name: x
+  - description: float, y value for the axis of rotation
+    name: y
+  - description: float, z value for the axis of rotation
+    name: z
+  related:
+  - translate
+  - scale
+  - pushMatrix
+  - popMatrix
+  syntax: |
+    rotate( angle )
+    rotate( angle, x, y, z )
+    
+#---------------------------------
+
+#---------------------------------
+# scale()
+#---------------------------------        
+- category: function
+  description: Specifies an amount of scale to apply to all drawing. All subsequent
+    drawing functions will be scaled by the x and y values specified in this function.
+    Scale values are specified as a scalar multipliers, for example, scale(2.0,
+    2.0) will double the `x` and `y` dimensions of subsequent drawing
+    commands. `scale()` is cumulative, so calling `scale(0.5)` followed
+    by `scale(0.5)` will scale all subsequent drawing operations by 0.25 (i.e.,
+    one quarter of their original size).
+  group: Transform
+  id: scale
+  name: scale( x, y )
+  parameters:
+  - description: uniform amount of scale to apply horizontally and vertically. Applies
+      on all axis, x, y and z.
+    name: amount
+  - description: amount of scale to apply on the x axis (horizontal)
+    name: x
+  - description: amount of scale to apply on the y axis (vertical)
+    name: y
+  - description: amount of scale to apply on the z axis (depth)
+    name: z
+  related:
+  - rotate
+  - translate
+  - pushMatrix
+  - popMatrix
+  syntax: |
+    scale( amount )
+    scale( x, y )
+    scale( x, y, z )     
+#---------------------------------
+
+#---------------------------------
+# zLevel()
+#---------------------------------        
+- category: function
+  description: >
+    Sets the z level of future drawing operations. Negative values
+    mean the drawing will occur behind (further into the screen), positive values
+    will cause drawing to happen in front. By default all drawing will occur above
+    previous drawing operations.
+  
+
+    This property is pushed onto the matrix stack with `pushMatrix()`.
+  group: Transform
+  id: zLevel
+  name: zLevel( z )
+  parameters:
+  - description: float, the amount of depth for future drawing operations, use positive
+      values to draw in front, and negative values to draw behind.
+    name: z
+  related:
+  - translate
+  - pushMatrix
+  - popMatrix
+  syntax: zLevel( z )
+#---------------------------------
+
+#---------------------------------
+# perspective()
+#---------------------------------      
+- category: function
+  description: >
+    Sets the projection matrix to the perspective projection defined
+    by the parameters `fov` (field of view, in degrees), `aspect` (aspect
+    ratio of the screen, defaults to WIDTH/HEIGHT), `near` and `far`.
+    The near and far values specify the closest and farthest distance an object
+    can be without being clipped by the view frustum.
+  
+
+    When called without
+    arguments, sets up a perspective projection with a field of view of 45 degrees
+    and an aspect ratio of WIDTH/HEIGHT.
+  group: Advanced Transform
+  id: perspective
+  name: perspective( fov, aspect, near, far )
+  parameters:
+  - description: float, field of view in degrees
+    name: fov
+  - description: float, aspect ratio of the screen. Defaults to WIDTH/HEIGHT
+    name: aspect
+  - description: float, near clipping plane, defaults to 0.1
+    name: near
+  - description: float, far clipping plane, default value is computed based on the
+      height of the screen
+    name: far
+  related:
+  - projectionMatrix
+  - ortho
+  - camera
+  - matrix
+  - WIDTH
+  - HEIGHT
+  syntax: |
+    perspective()
+    perspective( fov )
+    perspective( fov, aspect )
+    perspective( fov, aspect, near, far )
+#---------------------------------
+
+#---------------------------------
+# ortho()
+#---------------------------------             
+- category: function
+  description: >
+    Sets the projection matrix to the orthographic projection defined
+    by the parameters `left`, `right`, `bottom`, `top`, `near`
+    and `far`. The near and far values specify the closest and farthest distance
+    an object can be without being clipped by the view frustum.
+  
+
+    When called with no arguments, sets up the default orthographic projection, equivalent
+    to ortho( 0, WIDTH, 0, HEIGHT, -10, 10 ).
+  group: Advanced Transform
+  id: ortho
+  name: ortho( left, right, bottom, top )
+  parameters:
+  - description: float, left edge of the frustum
+    name: left
+  - description: float, right edge of the frustum
+    name: right
+  - description: float, bottom edge of the frustum
+    name: bottom
+  - description: float, top edge of the frustum
+    name: top
+  related:
+  - projectionMatrix
+  - perspective
+  - camera
+  - matrix
+  - WIDTH
+  - HEIGHT
+  syntax: |
+    ortho()
+    ortho( left, right, bottom, top )
+    ortho( left, right, bottom, top, 
+                          near, far )
+#---------------------------------
+
+#---------------------------------
+# camera()
+#---------------------------------        
+- category: function
+  description: >
+    Sets the view matrix to the simulate a camera positioned at `eye`
+    and looking at `center`. With an up-vector specified by `up`.
+  
+
+    This can be used in conjunction with the `perspective` projection to simulate
+    a camera positioned in 3D space looking at your scene.
+  group: Advanced Transform
+  id: camera
+  name: camera(eyeX,eyeY,eyeZ, cX,cY,cZ, upX,upY,upZ)
+  parameters:
+  - description: floats, position of the "eye" in 3D
+    name: eyeX/Y/Z
+  - description: floats, coordinate to look at
+    name: centerX/Y/Z
+  - description: floats, up-vector of the camera, defaults to (0, 1, 0)
+    name: upX/Y/Z
+  related:
+  - viewMatrix
+  - perspective
+  - matrix
+  - WIDTH
+  - HEIGHT
+  syntax: |
+    camera( eyeX, eyeY, eyeZ,
+            centerX, centerY, centerZ,
+            upX, upY, upZ )
+#---------------------------------
+
+#---------------------------------
+# applyMatrix()
+#---------------------------------                
+- category: function
+  description: Multiplies the matrix specified by `matrix` against the current
+    model matrix. The current model matrix represents the world transform, this
+    is the same matrix used in `pushMatrix` and `popMatrix` operations.
+  group: Advanced Transform
+  id: applyMatrix
+  name: applyMatrix( matrix )
+  parameters:
+  - description: matrix, the transformation to multiply against the current world
+      transform
+    name: matrix
+  related:
+  - modelMatrix
+  - matrix
+  - pushMatrix
+  - translate
+  syntax: applyMatrix( matrix )
+#---------------------------------
+
+#---------------------------------
+# modelMatrix()
+#---------------------------------          
+- category: function
+  description: When called with no arguments, returns a `matrix` containing
+    current world transformation. When called with a `matrix` argument, sets
+    the current world transformation to the given matrix.
+  group: Advanced Transform
+  id: modelMatrix
+  name: modelMatrix()
+  parameters:
+  - description: matrix, the transformation to set as the current world transform
+    name: matrix
+  related:
+  - viewMatrix
+  - projectionMatrix
+  - matrix
+  - pushMatrix
+  returns: The current model matrix when called with no arguments
+  syntax: |
+    modelMatrix()
+    modelMatrix( matrix )
+#---------------------------------
+
+#---------------------------------
+# viewMatrix()
+#---------------------------------        
+- category: function
+  description: >
+    When called with no arguments, returns a `matrix` containing
+    current view transformation. When called with a `matrix` argument, sets
+    the current view transformation to the given matrix.
+  
+
+    The view transform
+    defaults to the identity matrix and is provided as a convenient place to store
+    a camera transform when dealing with 3D scenes. Standard Codea projects do not
+    normally utilise it. See the `camera()` function for a convenient way to
+    set up the view transform.
+  group: Advanced Transform
+  id: viewMatrix
+  name: viewMatrix()
+  parameters:
+  - description: matrix, the transformation to set as the current view transform
+    name: matrix
+  related:
+  - modelMatrix
+  - camera
+  - projectionMatrix
+  - matrix
+  returns: The current view matrix when called with no arguments
+  syntax: |
+    viewMatrix()
+    viewMatrix( matrix )
+#---------------------------------
+
+#---------------------------------
+# projectionMatrix()
+#---------------------------------        
+- category: function
+  description: >
+    When called with no arguments, returns a `matrix` containing
+    current projection transformation. When called with a `matrix` argument,
+    sets the current projection transformation to the given matrix.
+  
+
+    The projection transform defaults to an orthographic projection the width and height
+    of the screen. See the `perspective` and `ortho` functions for more
+    advanced ways to set up the projection matrix.
+  group: Advanced Transform
+  id: projectionMatrix
+  name: projectionMatrix()
+  parameters:
+  - description: matrix, the transformation to set as the current projection transform
+    name: matrix
+  related:
+  - modelMatrix
+  - perspective
+  - ortho
+  - viewMatrix
+  - matrix
+  returns: The current projection matrix when called with no arguments
+  syntax: |
+    projectionMatrix()
+    projectionMatrix( matrix )
+#---------------------------------
+
+#---------------------------------
+# color()
+#---------------------------------        
+- category: type
+  description: This type represents a color with transparency information. You can
+    provide this type as arguments to the style functions `fill()`, `tint()`,
+    `stroke()`, and `background()`.
+  examples:
+  - example: |
+      --Fill with red
+      c = color( 255, 0, 0 )
+      fill( c )
+  group: Style
+  id: color
+  name: color
+  parameters:
+  - description: int, the red component of this color from `0` to `255`
+    name: r
+  - description: int, the green component of this color from `0` to `255`
+    name: g
+  - description: int, the blue component of this color from `0` to `255`
+    name: b
+  - description: int, the alpha component of this color from `0` to `255`
+    name: a
+  related:
+  - fill
+  - stroke
+  - tint
+  - background
+  syntax: |
+    color.r
+    color.g
+    color.b
+    color.a
+    myColor = color( 255, 0, 0, 255 ) --red
+#---------------------------------
+
+#---------------------------------
+# color.blend()
+#---------------------------------        
+- category: method
+  description: This method computes a color by blending two `color` types.
+    Colors are blended based on the first color's alpha value. The blend amount
+    is determined by the alpha value of the color invoking this method.
+  group: Style
+  id: color.blend
+  name: color.blend( c )
+  parameters:
+  - description: color, compute the blending between this color and c
+    name: c
+  related:
+  - color
+  - color.mix
+  returns: Color computed by blending this `color` and `c`
+  syntax: |
+    c1 = color( 0, 0, 0, 128 )
+    c2 = color( 255, 255, 255, 255 )
+    c3 = c1:blend( c2 )
+#---------------------------------
+
+#---------------------------------
+# color.mix()
+#---------------------------------        
+- category: method
+  description: This method computes a color by mixing two `color` types linearly.
+    Colors are blended based on the specified mix value, `amount`. A value
+    of 0.5 for `amount` will generate a color that is half way between the
+    two input colors.
+  group: Style
+  id: color.mix
+  name: color.mix( c, amount )
+  parameters:
+  - description: color, compute the mixing between this color and c
+    name: c
+  - description: scalar, amount of contribution from either color. A value of 0.0
+      will result in the starting color, and 1.0 will result in the destination
+      color.
+    name: amount
+  related:
+  - color
+  - color.blend
+  returns: Color computed by mixing this `color` and `c` by `amount`
+  syntax: |
+    c1 = color( 255, 0, 0, 255 )
+    c2 = color( 0, 255, 0, 255 )
+    c3 = c1:mix( c2, 0.5 )
+#---------------------------------
+
+#---------------------------------
+# blendMode()
+#---------------------------------
+- category: function
+  description: >
+    Sets the blend mode for all further drawing. The blend mode decides how new drawing operations are
+    blended with underlying pixels.
+    
+    
+    The default blend mode is `blendMode( NORMAL )`, this blends graphics
+    according to their alpha value. `NORMAL` will cause drawing operations to replace the underlying pixels
+    where the alpha value is 1.0, and mix with the underlying pixels where alpha is less than 1.0.
+    
+    
+    `ADDITIVE` blend mode blends drawing operations by **adding** color. Using this mode will cause
+    overlapping drawing to tend towards white. This allows for glowing effects, and is useful
+    for particle rendering (e.g. sparks, glows, fire).
+    
+    
+    `MULTIPLY` blend mode blends drawing operations by **multiplying** color. Using this mode will cause
+    overlapping drawing to tend towards black. 
+    
+    
+    More advanced blend modes can be set up by using the advanced two and four parameter versions of the function.
+    Advanced blend modes parameters are similar to the OpenGL functions glBlendFunc and glBlendFuncSeparate.
+    
+    
+    Calling `blendMode()` with no arguments will return the current blend
+    mode (multiple values will returned if an advanced blend mode is set, up to four values can be returned).
+  group: Style
+  id: blendMode
+  name: blendMode( MODE )
+  parameters:
+  - name: mode
+    description: >
+      either `NORMAL`, `MULTIPLY` or `ADDITIVE`
+      
+      
+      `NORMAL`: specifies normal alpha-based blending
+      
+      
+      `MULTIPLY`: specifies multiplicative blending
+      
+      
+      `ADDITIVE`: specifies additive blending
+  - name: srcFactor
+    description: |
+      `ZERO`
+      `ONE`
+      `DST_COLOR`
+      `ONE_MINUS_DST_COLOR`
+      `SRC_ALPHA`
+      `ONE_MINUS_SRC_ALPHA`
+      `DST_ALPHA`
+      `ONE_MINUS_DST_ALPHA`
+      `SRC_ALPHA_SATURATE`      
+  - name: destFactor
+    description: |
+      `ZERO`
+      `ONE`
+      `SRC_COLOR`
+      `ONE_MINUS_SRC_COLOR`
+      `SRC_ALPHA`
+      `ONE_MINUS_SRC_ALPHA`
+      `DST_ALPHA`
+      `ONE_MINUS_DST_ALPHA`
+  - name: srcAlpha
+    description: >
+      When this parameter is used, the factor specified for `srcAlpha` will be used to determine how to 
+      calculate the alpha value of the source fragment.
+  - name: destAlpha
+    description: >
+      When this parameter is used, the factor specified for `destAlpha` will be used to determine how to
+      calculate the alpha value of the destination fragment.
+  returns: The current blend mode if called without arguments (up to four values can be returned). Returns nothing if called with arguments.
+  syntax: |
+    blendMode()
+    blendMode( NORMAL | ADDITIVE | MULTIPLY )
+    blendMode( srcFactor, destFactor )
+    blendMode( srcFactor, destFactor,
+               srcAlpha, destAlpha )
+               
+#---------------------------------
+# blendEquation()
+#---------------------------------
+- category: function
+  description: >
+    Sets the blend equation for all further drawing. The blend equation determines how the destination
+    pixels are computed given the current blend mode (see `blendMode`)
+    
+    
+    By default, the terms in the blend mode are added together to determine the color of the resulting
+    pixel. Using this function you can change the operator to `ADD`, `SUBTRACT`, `REVERSE_SUBTRACT`, `MIN`,
+    and `MAX`
+  group: Style
+  id: blendEquation
+  name: blendEquation( equation )
+  parameters:
+  - name: equation
+    description: >
+      Can be either `ADD`, `SUBTRACT`, `REVERSE_SUBTRACT`, `MIN` or `MAX`
+      
+      
+      Given source (S) and destination (D) pixels, the operators perform the
+      following:
+      
+      
+      `ADD`: S + D
+      
+      
+      `SUBTRACT`: S - D
+      
+      
+      `REVERSE_SUBTRACT`: D - S
+      
+      
+      `MIN`: min(S, D)
+      
+      
+      `MAX`: max(S, D)
+  - name: alphaEquation
+    description: >
+      An optional second parameter specifying the equation to use when blending the alpha components
+  returns: The current blend equation and alpha equation if called without arguments. Returns nothing if called with arguments.
+  related:
+  - blendMode
+  syntax: |
+    blendEquation()
+    blendEquation( ADD | SUBTRACT | REVERSE_SUBTRACT | MIN | MAX )
+    blendEquation( equation )
+    blendEquation( equation, alphaEquation )
+
+#---------------------------------
+# ellipseMode()
+#---------------------------------        
+- category: function
+  description: Sets the origin of the ellipses drawn with the `ellipse()` function.
+    The default is `ellipseMode( CENTER )`.
+  group: Style
+  id: ellipseMode
+  name: ellipseMode( MODE )
+  parameters:
+  - description: >
+      either `CENTER`, `RADIUS`, `CORNER` or `CORNERS`
+    
+
+      `CENTER`: x, y specifies the center of the ellipse, w, h specify its x and y diameter.
+      
+
+      `RADIUS`: x, y specifies the center of the ellipse, w, h specify its x and y radius.
+      
+
+      `CORNER`: x, y specifies the lower left corner of the ellipse, w, h specify the size its x and y diameter.
+      
+
+      `CORNERS`: x, y sets the lower left   coordinate of the ellipse's bounding box. w, h sets the upper right coordinate of the ellipse's bounding box.
+    name: mode
+  related:
+  - ellipse
+  returns: The current ellipse mode if called without arguments. Returns nothing
+    if called with arguments.
+  syntax: |
+    ellipseMode()
+    ellipseMode(CENTER|RADIUS|CORNER|CORNERS)
+#---------------------------------
+
+#---------------------------------
+# rectMode()
+#---------------------------------        
+- category: function
+  description: Sets the origin of the rectangles drawn with the `rect()` function.
+    The default is `rectMode( CORNER )`.
+  group: Style
+  id: rectMode
+  name: rectMode( MODE )
+  parameters:
+  - description: >
+      either `CENTER`, `RADIUS`, `CORNER` or `CORNERS`
+    
+
+      `CENTER`: x, y specifies the center of the rectangle, w, h specifies the rectangle's width
+      and height.
+      
+
+      `RADIUS`: x, y specifies the center of the rectangle,
+      w, h specifies half the rectangle's width and height.
+      
+
+      `CORNER`: x, y specifies the lower left corner of the rectangle, w and h specify the rectangle's
+      width and height.
+      
+
+      `CORNERS`: x, y sets the lower left coordinate
+      of the rectangle's bounding box. w, h sets the upper right coordinate of the
+      rectangle's bounding box.
+    name: mode
+  related:
+  - rect
+  returns: The current rect mode if called without arguments. Returns nothing if
+    called with arguments.
+  syntax: |
+    rectMode()
+    rectMode(CENTER|RADIUS|CORNER|CORNERS)
+#---------------------------------
+
+#---------------------------------
+# spriteMode()
+#---------------------------------        
+- category: function
+  description: Sets the origin of the sprites drawn with the `sprite()` function.
+    The default is `spriteMode( CENTER )`.
+  group: Style
+  id: spriteMode
+  name: spriteMode( MODE )
+  parameters:
+  - description: >
+      either `CENTER`, `RADIUS`, `CORNER` or `CORNERS`
+    
+
+      `CENTER`  x, y specifies the center of the sprite, w, h specifies the sprite's width and
+      height.
+      
+
+      `RADIUS`  x, y specifies the center of the sprite, w, h specifies half the sprite's width and height.
+      
+
+      `CORNER`  x, y specifies the lower left corner of the sprite, w and h specify the sprite's
+      width and height.
+      
+
+      `CORNERS`  x, y sets the lower left coordinate of the sprite's bounding box. w, h sets the upper right coordinate of the
+      sprite's bounding box.
+    name: mode
+  related:
+  - sprite
+  returns: The current sprite mode if called without arguments. Returns nothing
+    if called with arguments.
+  syntax: |
+    spriteMode()
+    spriteMode( CENTER|RADIUS|CORNER|CORNERS )
+    
+#---------------------------------
+
+#---------------------------------
+# spriteSize()
+#---------------------------------        
+- category: function
+  description: >
+    Returns the pixel size of the sprite specified by `asset`. If
+    the sprite name is valid this function returns two values, width and height.
+    
+    
+    If the sprite name represents a multi-page PDF, then this function will
+    return three values: width, height, and page count.
+  group: Style
+  id: spriteSize
+  name: spriteSize( asset )
+  parameters:
+  - description: asset key for the sprite, e.g., `asset.MyFileName`
+    name: name
+  - description: image object
+    name: image
+  related:
+  - sprite
+  - image
+  returns: Width and height of the sprite specified by `asset`, or image object
+  syntax: |
+    w, h = spriteSize(asset.builtin.Planet_Cute.Character_Boy)
+    w, h = spriteSize( image )
+  related: [assetsOverview, sprite, image]
+#---------------------------------
+
+#---------------------------------
+# textMode()
+#---------------------------------        
+- category: function
+  description: Sets the origin of text drawn with the `text()` function. The
+    default is `textMode( CENTER )`.
+  group: Style
+  id: textMode
+  name: textMode( MODE )
+  parameters:
+  - description: >
+      either `CENTER` or `CORNER`
+    
+
+      `CENTER`: x, y specifies
+      the center of the text.
+      
+
+      `CORNER`: x, y specifies the lower left
+      corner of the text.
+    name: mode
+  related:
+  - text
+  returns: The current text mode if called without arguments. Returns nothing if
+    called with arguments.
+  syntax: |
+    textMode()
+    textMode( CENTER|CORNER )
+#---------------------------------
+
+#---------------------------------
+# lineCapMode()
+#---------------------------------        
+- category: function
+  description: Sets the style of the line caps drawn with the `line()` function.
+    The default is `lineCapMode( ROUND )`. Note that `lineCapMode()` only
+    has an effect if `smooth()` is set.
+  examples:
+  - example: |
+      background(40, 40, 50)
+      smooth()
+      stroke(255)
+      strokeWidth(15)
+
+      translate(WIDTH/2, HEIGHT/2)
+
+      lineCapMode(ROUND)
+      line(-30, -30, -30, 30)
+      lineCapMode(SQUARE)
+      line(0, -30, 0, 30)
+      lineCapMode(PROJECT)
+      line(30, -30, 30, 30)
+    image: media/lineCapMode_ex1.png
+  group: Style
+  id: lineCapMode
+  name: lineCapMode( MODE )
+  parameters:
+  - description: >
+      either `ROUND`, `SQUARE` or `PROJECT`
+  
+
+      `ROUND`: line ends
+      are rounded with circles
+  
+
+      `SQUARE`: line ends are squared off
+      at the end points
+      
+
+      `PROJECT`: line ends are squared off, but
+      project out as far as if they were rounded
+    name: mode
+  related:
+  - line
+  - stroke
+  - strokeWidth
+  returns: The current line cap mode if called without arguments. Returns nothing
+    if called with arguments.
+  syntax: |
+    lineCapMode()
+    lineCapMode( ROUND | SQUARE | PROJECT )
+#---------------------------------
+
+#---------------------------------
+# fill()
+#---------------------------------       
+- category: function
+  description: Sets the color used to fill shapes drawn with the `ellipse()`
+    and `rect()` functions. Also sets the color of text drawn with the `text()`
+    function.
+  group: Style
+  id: fill
+  name: fill( red, green, blue, alpha )
+  parameters:
+  - description: int from `0` to `255`, specifies value between white and black
+    name: gray
+  - description: int from `0` to `255`, specifies opacity of the fill
+    name: alpha
+  - description: int from `0` to `255`, specifies red amount of the fill
+    name: red
+  - description: int from `0` to `255`, specifies green amount of the fill
+    name: green
+  - description: int from `0` to `255`, specifies blue amount of the fill
+    name: blue
+  - description: a value of the color datatype
+    name: color
+  related:
+  - noFill
+  - stroke
+  - color
+  returns: Four values (r,g,b,a) representing the current fill color if called without
+    arguments. Returns nothing if called with arguments.
+  syntax: |
+    fill()
+    fill( gray )
+    fill( gray, alpha )
+    fill( red, green, blue )
+    fill( red, green, blue, alpha )
+    fill( color )
+#---------------------------------
+
+#---------------------------------
+# noFill()
+#---------------------------------       
+- category: function
+  description: Sets the color of the fill to completely transparent.
+  group: Style
+  id: noFill
+  name: noFill()
+  related:
+  - fill
+  - noStroke
+  syntax: noFill()
+#---------------------------------
+
+#---------------------------------
+# tint()
+#---------------------------------     
+- category: function
+  description: >
+    Sets the color used to tint sprites drawn with the `sprite()`
+    function. This color is multiplied with the sprite's color by default.
+  
+
+    Setting a white tint with a partial alpha value will make a sprite semi-transparent.
+  examples:
+  - example: |
+      background(127, 127, 127, 255)
+      tint(255, 0, 0)
+      sprite(asset.builtin.Planet_Cute.Character_Boy, WIDTH / 2, HEIGHT / 2)
+    image: media/sprite_ex2.png
+  group: Style
+  id: tint
+  name: tint( red, green, blue, alpha )
+  parameters:
+  - description: int from `0` to `255`, specifies value between white and black
+    name: gray
+  - description: int from `0` to `255`, specifies opacity of the tint
+    name: alpha
+  - description: int from `0` to `255`, specifies red amount of the tint
+    name: red
+  - description: int from `0` to `255`, specifies green amount of the tint
+    name: green
+  - description: int from `0` to `255`, specifies blue amount of the tint
+    name: blue
+  - description: a value of the color datatype
+    name: color
+  related:
+  - sprite
+  - noTint
+  returns: Four values (r,g,b,a) representing the current tint color if called without
+    arguments. Returns nothing if called with arguments.
+  syntax: |
+    tint()
+    tint( gray )
+    tint( gray, alpha )
+    tint( red, green, blue )
+    tint( red, green, blue, alpha )
+    tint( color )
+#---------------------------------
+
+#---------------------------------
+# noTint()
+#---------------------------------       
+- category: function
+  description: Sets the color of the tint to white and completely opaque.
+  group: Style
+  id: noTint
+  name: noTint()
+  related:
+  - tint
+  - sprite
+  syntax: noTint()
+#---------------------------------
+
+#---------------------------------
+# stroke()
+#---------------------------------     
+- category: function
+  description: Sets the color used to outline the shapes drawn with the `ellipse()`
+    and `rect()` functions. Also sets the color of lines drawn with the `line()`
+    function.
+  group: Style
+  id: stroke
+  name: stroke( red, green, blue, alpha )
+  parameters:
+  - description: int from `0` to `255`, specifies value between white and black
+    name: gray
+  - description: int from `0` to `255`, specifies opacity of the stroke
+    name: alpha
+  - description: int from `0` to `255`, specifies red amount of the stroke
+    name: red
+  - description: int from `0` to `255`, specifies green amount of the stroke
+    name: green
+  - description: int from `0` to `255`, specifies blue amount of the stroke
+    name: blue
+  - description: a value of the color datatype
+    name: color
+  related:
+  - strokeWidth
+  - noStroke
+  - fill
+  returns: Four values (r,g,b,a) representing the current stroke color if called
+    without arguments. Returns nothing if called with arguments.
+  syntax: |
+    stroke()
+    stroke( gray )
+    stroke( gray, alpha )
+    stroke( red, green, blue )
+    stroke( red, green, blue, alpha )
+    stroke( color )
+#---------------------------------
+
+#---------------------------------
+# strokeWidth()
+#---------------------------------       
+- category: function
+  description: Sets the width of the outline of shapes drawn with the `ellipse()`
+    and `rect()` functions. Also sets the width of lines drawn with the `line()`
+    function.
+  group: Style
+  id: strokeWidth
+  name: strokeWidth( width )
+  parameters:
+  - description: int or float, the width in pixels of the stroke
+    name: width
+  related:
+  - stroke
+  - noStroke
+  returns: The current stroke width if called without arguments. Returns nothing
+    if called with arguments.
+  syntax: |
+    strokeWidth()
+    strokeWidth( width )
+#---------------------------------
+
+#---------------------------------
+# noStroke()
+#---------------------------------       
+- category: function
+  description: Sets the stroke width to zero.
+  group: Style
+  id: noStroke
+  name: noStroke()
+  related:
+  - stroke
+  - strokeWidth
+  syntax: noStroke()
+#---------------------------------
+
+#---------------------------------
+# smooth()
+#---------------------------------     
+- category: function
+  description: >
+    This enables smooth line drawing, texture filtering and antialiasing. Lines will appear anti-aliased and respect styles set using the `lineCapMode()` function. Sprite textures will appear smoother when scaled, and primitive shapes will have antialiased edges
+  group: Style
+  id: smooth
+  name: smooth()
+  related:
+  - noSmooth
+  - line
+  - lineCapMode
+  syntax: smooth()
+#---------------------------------
+
+#---------------------------------
+# noSmooth()
+#---------------------------------     
+- category: function
+  description: >
+    This disables smooth line drawing, texture filtering and antialiasing. Lines will appear aliased, scaled sprites will have pixellated textures, and primitive shapes, such as ellipse, will no longer have antialiased edges
+    
+    
+    Use this option to draw very thin lines clearly, or to draw pixel-art style graphics.
+  group: Style
+  id: noSmooth
+  name: noSmooth()
+  related:
+  - smooth
+  - line
+  - lineCapMode
+  syntax: noSmooth()
+#---------------------------------
+
+#---------------------------------
+# font()
+#---------------------------------     
+- category: function
+  description: This sets the current font to the font specified by `name`.
+    If no argument is given `font()` returns the current font. The default
+    font is "Helvetica".
+  group: Style
+  id: font
+  name: font( name )
+  parameters:
+  - description: |
+      string, the name of the font to use. A list of available fonts can be found
+      by tapping on the `font()` function in the code editor.
+    name: name
+  related:
+  - text
+  - fontSize
+  returns: The current font if called without arguments. Returns nothing if called
+    with arguments.
+  syntax: |
+    font()
+    font( name )
+#---------------------------------
+
+#---------------------------------
+# fontSize()
+#---------------------------------      
+- category: function
+  description: This sets the current font size to the size specified by `size`.
+    If no argument is given `fontSize()` returns the current font size. The
+    default font size is 17 points.
+  group: Style
+  id: fontSize
+  name: fontSize( size )
+  parameters:
+  - description: float, the size of the font (in points). Must be greater than 0.0.
+    name: size
+  related:
+  - text
+  - font
+  returns: The current font size if called without arguments. Returns nothing if
+    called with arguments.
+  syntax: |
+    fontSize()
+    fontSize( size )
+#---------------------------------
+
+#---------------------------------
+# fontMetrics()
+#---------------------------------      
+- category: function
+  description: >
+    This function returns a table of font metrics for the currently
+    defined font (as defined by `font()` and `fontSize()`). The metrics
+    table contains advanced information about the font's measurements, such as ascent,
+    leading, x height, and so on.
+  
+
+    Please note that this function only
+    works on iOS 5 and above.
+  group: Style
+  id: fontMetrics
+  name: fontMetrics()
+  related:
+  - font
+  - fontSize
+  returns: |
+    A table containing the following keys:
+        ascent
+        descent
+        leading
+        xHeight
+        capHeight
+        underlinePosition
+        underlineThickness
+        slantAngle
+        size
+  syntax: fontMetrics()
+#---------------------------------
+
+#---------------------------------
+# textAlign()
+#---------------------------------    
+- category: function
+  description: This sets the alignment of text rendered with the `text()` function.
+    This is generally used in conjunction with `textWrapWidth()` to produce
+    multi-line, word-wrapped text aligned to the LEFT, CENTER or RIGHT. If called
+    without arguments this function returns the current text alignment. The default
+    text alignment is `textAlign( LEFT )`.
+  group: Style
+  id: textAlign
+  name: textAlign( ALIGN )
+  parameters:
+  - description: Can be `LEFT`, `CENTER` or `RIGHT`
+    name: ALIGN
+  related:
+  - text
+  - textWrapWidth
+  returns: The current text alignment if called without arguments. Returns nothing
+    if called with arguments.
+  syntax: |
+    textAlign()
+    textAlign( LEFT|CENTER|RIGHT )
+#---------------------------------
+
+#---------------------------------
+# textWrapWidth()
+#---------------------------------      
+- category: function
+  description: This sets the wrap width, in pixels, of text rendered with `text()`.
+    If set to a value greater than 0, it causes text to wrap onto the next line
+    when the line's width exceeds the specified `width`. When this is called
+    without arguments, it returns the current text wrap width. The default text
+    wrap width is 0, which indicates no wrapping, and that text should be rendered
+    on one line.
+  examples:
+  - example: |
+      background(100, 120, 160)
+      font("Georgia")
+      fill(255)
+      fontSize(20)
+      textWrapWidth(70)
+      text("Hello World!", WIDTH/2, HEIGHT/2)
+    image: media/text_ex1.png
+  group: Style
+  id: textWrapWidth
+  name: textWrapWidth( width )
+  parameters:
+  - description: float, width before the text rendered by `text()` word-wraps
+    name: width
+  related:
+  - text
+  - textAlign
+  returns: The current text wrap width if called without arguments. Returns nothing
+    if called with arguments.
+  syntax: |
+    textWrapWidth()
+    textWrapWidth( width )
+#---------------------------------
+
+#---------------------------------
+# textSize()
+#---------------------------------      
+- category: function
+  description: >
+    This function returns the dimensions of the specified string
+    when rendered with the current font size and style. Note that this function
+    returns two values: width and height. You can use these dimensions to, for example,
+    render a button behind a piece of text, position text within a speech bubble,
+    and so on.
+  examples:
+  - example: |
+      background(100, 120, 160)
+      font("Georgia")
+      fontSize(20)
+      textWrapWidth(70)
+
+      -- Get the dimensions of our string
+      w,h = textSize("Hello World!")
+
+      -- Draw a box behind our text
+      fill(120,0,40)
+      strokeWidth(2)
+      rectMode(CENTER)
+      rect(WIDTH/2,HEIGHT/2,w+15,h+15)
+      
+      fill(255)
+      text("Hello World!",WIDTH/2,HEIGHT/2)
+    image: media/textSize_ex1.png
+  group: Text Metrics
+  id: textSize
+  name: textSize( string )
+  parameters:
+  - description: string, the string to measure
+    name: string
+  related:
+  - text
+  returns: width and height of the text string when rendered with the current font
+    size and style.
+  syntax: |
+    width = textSize( string )
+    width, height = textSize( string )
+#---------------------------------
+
+#---------------------------------
+# pushMatrix()
+#---------------------------------      
+- category: function
+  description: >
+    The `pushMatrix()` function saves any transformations that
+    have been made and pushes a copy of them onto the top of the stack. You can
+    then perform further transforms (translations, rotations and scales), perform
+    drawing operations, and return to the previous transformation by calling `popMatrix()`.
+    You can nest calls to `pushMatrix()` and `popMatrix()` for more complex
+    object placement.
+  
+
+    The following transform calls are preserved when
+    using `pushMatrix()` and `popMatrix()`: translate(), rotate(), scale()
+  group: Transform Management
+  id: pushMatrix
+  name: pushMatrix()
+  related:
+  - popMatrix
+  - resetMatrix
+  - translate
+  - rotate
+  - scale
+  syntax: pushMatrix()
+#---------------------------------
+
+#---------------------------------
+# popMatrix()
+#---------------------------------       
+- category: function
+  description: >
+    The `popMatrix()` function saves any transformations that
+    have been made and pushes a copy of them onto the top of the stack. You can
+    then perform further transforms (translations, rotations and scales), perform
+    drawing operations, and return to the previous transformation by calling `popMatrix()`.
+    You can nest calls to `pushMatrix()` and `popMatrix()` for more complex
+    object placement.
+  
+
+    The following transform calls are preserved when
+    using `pushMatrix()` and `popMatrix()`: translate(), rotate(), scale()
+  group: Transform Management
+  id: popMatrix
+  name: popMatrix()
+  related:
+  - pushMatrix
+  - resetMatrix
+  - translate
+  - rotate
+  - scale
+  syntax: popMatrix()
+#---------------------------------
+
+#---------------------------------
+# resetMatrix()
+#--------------------------------- 
+- category: function
+  description: This function resets all transformation. It replaces the current
+    transform matrix with the identity matrix. This effectively repositions all
+    drawing at 0, 0, with no rotation and scaling.
+  group: Transform Management
+  id: resetMatrix
+  name: resetMatrix()
+  related:
+  - pushMatrix
+  - popMatrix
+  - translate
+  - rotate
+  - scale
+  syntax: resetMatrix()
+#---------------------------------
+
+#---------------------------------
+# pushStyle()
+#---------------------------------     
+- category: function
+  description: >
+    The `pushStyle()` function saves the current graphics style
+    and pushes a copy of the current style onto the top of the stack. You can then
+    modify the style, perform drawing operations, and return to the previous style
+    by calling `popStyle()`. You can nest calls to `pushStyle()` and `popStyle()`
+    in order to provide more control.
+  
+
+    Styles set with the following functions
+    are preserved when using `pushStyle()` and `popStyle()`: fill(), noFill(),
+    stroke(), noStroke(), tint(), noTint(), strokeWidth(), lineCapMode(), ellipseMode(),
+    rectMode(), spriteMode(), smooth(), noSmooth(), font(), fontSize(), textAlign(),
+    textMode() and textWrapWidth()
+  group: Style Management
+  id: pushStyle
+  name: pushStyle()
+  related:
+  - popStyle
+  - resetStyle
+  syntax: pushStyle()
+#---------------------------------
+
+#---------------------------------
+# popStyle()
+#---------------------------------     
+- category: function
+  description: >
+    The `pushStyle()` function saves the current graphics style
+    and pushes a copy of the current style onto the top of the stack. You can then
+    modify the style, perform drawing operations, and return to the previous style
+    by calling `popStyle()`. You can nest calls to `pushStyle()` and `popStyle()`
+    in order to provide more control.
+  
+
+    Styles set with the following functions
+    are preserved when using `pushStyle()` and `popStyle()`: fill(), noFill(),
+    stroke(), noStroke(), tint(), noTint(), strokeWidth(), lineCapMode(), ellipseMode(),
+    rectMode(), spriteMode(), smooth(), noSmooth()
+  group: Style Management
+  id: popStyle
+  name: popStyle()
+  related:
+  - pushStyle
+  - resetStyle
+  syntax: popStyle()
+#---------------------------------
+
+#---------------------------------
+# resetStyle()
+#---------------------------------     
+- category: function
+  description: >
+    Calling `resetStyle()` will reset all style parameters to
+    their default values. This will effect whatever style is currently on the top
+    of the stack.
+  
+
+    Styles set with the following functions are reset when
+    using `resetStyle()`: fill(), noFill(), stroke(), noStroke(), tint(), noTint(),
+    strokeWidth(), lineCapMode(), ellipseMode(), rectMode(), spriteMode(), smooth(),
+    noSmooth()
+  group: Style Management
+  id: resetStyle
+  name: resetStyle()
+  related:
+  - pushStyle
+  - popStyle
+  syntax: resetStyle()
+#---------------------------------
+
+#---------------------------------
+# WIDTH
+#---------------------------------     
+- category: const
+  description: This constant is set to the width of the screen in pixels.
+  group: Constants
+  id: WIDTH
+  name: WIDTH
+  related:
+  - HEIGHT
+  returns: Width of the screen in pixels
+  syntax: WIDTH
+#---------------------------------
+
+#---------------------------------
+# HEIGHT
+#---------------------------------     
+- category: const
+  description: This constant is set to the height of the screen in pixels.
+  group: Constants
+  id: HEIGHT
+  name: HEIGHT
+  related:
+  - WIDTH
+  returns: Height of the screen in pixels
+  syntax: HEIGHT
+#---------------------------------
+
+#---------------------------------
+# ElapsedTime
+#---------------------------------     
+- category: const
+  description: Query this variable to get the current elapsed time, in seconds,
+    while running your project.
+  group: Variables
+  id: ElapsedTime
+  name: ElapsedTime
+  related:
+  - DeltaTime
+  returns: Time in seconds since the start of running the project
+  syntax: ElapsedTime
+#---------------------------------
+
+#---------------------------------
+# DeltaTime
+#---------------------------------     
+- category: const
+  description: Query this variable to get the time elapsed, in seconds, since the
+    last draw call while running your project.
+  group: Variables
+  id: DeltaTime
+  name: DeltaTime
+  related:
+  - ElapsedTime
+  returns: Time in seconds since the start of the previous frame
+  syntax: DeltaTime
+#---------------------------------
+
+#---------------------------------
+# ContentScaleFactor
+#---------------------------------     
+- category: const
+  description: Query this variable to get the content scale factor. This specifies
+    the internal scaling of images and sprites. On retina devices this will be equal
+    to `2`, on non-retina devices it will be equal to `1`.
+  group: Variables
+  id: ContentScaleFactor
+  name: ContentScaleFactor
+  returns: Content scale factor of the viewer
+  syntax: ContentScaleFactor    
+  
+#---------------------------------
+
+#---------------------------------
+# cameraSource()
+#---------------------------------     
+- category: function
+  description: >
+    Calling `cameraSource()` will either set the current capture source, or return
+    the currently selected one if called with no parameters. 
+  
+
+    The capture source determines which input source is used when the `CAMERA` 
+    constant is used in the `image()` and `sprite()` functions and as a mesh texture.
+    
+
+    `CAMERA_BACK` is the default capture source.
+
+
+    If camera access is not authorized, or camera hardware is not available, `cameraSource()`
+    will return the value `-1`
+    
+    
+    To get the dimensions of the current capture source frame, use `spriteSize(CAMERA)`
+  examples:
+  - example: |
+      cameraSource( CAMERA_FRONT )
+      cameraSource( CAMERA_BACK )
+      currentSource = cameraSource()
+  group: Camera Input
+  id: cameraSource
+  name: cameraSource( source )
+  parameters:
+  - description: Either `CAMERA_FRONT` or `CAMERA_BACK`, determines the source to use.
+    name: source
+  related:
+  - image
+  - sprite
+  - spriteSize
+  - CAMERA
+  - CAMERA_DEPTH
+  - CAMERA_FRONT
+  - CAMERA_BACK
+  returns: >
+    `CAMERA_FRONT` or `CAMERA_BACK` if called without arguments, or `-1` if camera access is unavailble.
+    Returns nothing if called with arguments, or `-1` if camera access is unavailable.
+  syntax: |
+    cameraSource( source )
+    cameraSource()
+#---------------------------------
+
+#---------------------------------
+# CAMERA
+#---------------------------------     
+
+- category: const
+  description: >  
+    Uses the current capture source for images,
+    sprites and textures on meshes.
+  
+
+    `CAMERA` is a special constant that can be used with `image()`, `sprite()` and `mesh.texture`. 
+    When used with `image()` it provides an image containing a single snapshot from the device camera.
+    When used with `sprite()` and `mesh.texture` it provides a live stream of the device's camera.
+
+  examples:
+    - example: |
+        img = image(CAMERA)
+        sprite(CAMERA, x, y)
+        
+        local m = mesh()
+        m.texture = CAMERA
+  group: Camera Input
+  id: CAMERA
+  name: CAMERA
+  related:
+  - image
+  - sprite
+  - mesh
+  syntax: CAMERA
+
+#---------------------------------
+
+#---------------------------------
+# CAMERA_DEPTH
+#---------------------------------
+
+- category: const
+  description: >
+    Uses the current capture source for images,
+    sprites and textures on meshes.
+
+
+    `CAMERA_DEPTH` is a special constant that can be used with `image()`, `sprite()` and `mesh.texture`.
+    When used with `image()` it provides an image containing a single snapshot from the device's estimated
+    depth camera when used on supported devices. When used with `sprite()` and `mesh.texture` it provides a
+    live stream of the device's depth camera.
+
+
+    Note that generally only the `CAMERA_FRONT` source will support depth sensing, and only on devices
+    with a TrueDepth camera system.
+
+  examples:
+    - example: |
+        img = image(CAMERA_DEPTH)
+        sprite(CAMERA_DEPTH, x, y)
+
+        local m = mesh()
+        m.texture = CAMERA_DEPTH
+  group: Camera Input
+  id: CAMERA_DEPTH
+  name: CAMERA_DEPTH
+  related:
+  - image
+  - sprite
+  - mesh
+  syntax: CAMERA_DEPTH
+
+#---------------------------------
+
+#---------------------------------
+# CAMERA_FRONT
+#---------------------------------     
+
+- category: const
+  description: Select the front camera of the device for use when using CAMERA.
+  group: Camera Input
+  id: CAMERA_FRONT
+  name: CAMERA_FRONT
+  related:
+  - CAMERA
+  - cameraSource
+  syntax: CAMERA_FRONT
+
+#---------------------------------
+
+#---------------------------------
+# CAMERA_BACK
+#---------------------------------     
+
+- category: const
+  description: Select the back camera of the device for use when using CAMERA.
+  group: Camera Input
+  id: CAMERA_BACK
+  name: CAMERA_BACK
+  related:
+  - CAMERA
+  - cameraSource
+  syntax: CAMERA_BACK

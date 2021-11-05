@@ -1,0 +1,773 @@
+id: display
+name: Display & Keyboard
+subtitle: Using the Viewer's Display Modes
+ordering:
+    - Display Modes
+    - Layout
+    - Showing and Hiding the Keyboard
+    - Recording Video of Your Project
+    - Backing Types
+    - Viewer Actions
+functions:
+#---------------------------------
+# viewer.mode
+#--------------------------------- 
+- category: property
+  description: Changes the display mode of the viewer. You can use this to render
+    your games and simulations in fullscreen mode, fullscreen mode without buttons,
+    standard mode, or overlay mode.
+  examples:
+  - example: |
+      function setup()
+          --Set the viewer to fullscreen
+          viewer.mode = FULLSCREEN
+      end
+  - example: |
+      function setup()
+          --Set the viewer to standard
+          --i.e. visible parameters and output
+          viewer.mode = STANDARD
+      end
+  - example: |
+      function setup()
+          --Set the viewer to overlay
+          viewer.mode = OVERLAY
+      end
+  - example: |
+      function setup()
+          --Set the viewer to fullscreen
+          --Hide back/pause/play buttons
+          viewer.mode = FULLSCREEN_NO_BUTTONS
+      end
+  group: Display Modes
+  id: viewer.mode
+  name: viewer.mode
+  parameters:
+  - description: >
+      Either `STANDARD`, `OVERLAY`, `FULLSCREEN` or `FULLSCREEN_NO_BUTTONS`
+    name: mode
+  related:
+  - STANDARD
+  - OVERLAY
+  - FULLSCREEN
+  - FULLSCREEN_NO_BUTTONS
+  syntax: |
+    viewer.mode = STANDARD |
+                  OVERLAY |
+                  FULLSCREEN |
+                  FULLSCREEN_NO_BUTTONS
+  returns: The current display mode
+#---------------------------------
+
+#---------------------------------
+# viewer.preferredFPS
+#---------------------------------
+- category: property
+  description: >
+    Sets the preferred framerate of the viewer. You can set this to values of
+    0, 15, 30, 60 or 120. The value `0` is the default and will use the maximum framerate
+    of your device. Most devices support up to 60 frames per second, with some supporting
+    up to 120 frames per second
+    
+    
+    Note that this sets the preferred framerate, you should set this to a rate you
+    believe your project can consistently maintain. If the framerate cannot be maintained
+    it will drop below your preferred setting to the next lower value
+  examples:
+  - example: |
+      function setup()
+          --Set the viewer to a low framerate
+          viewer.preferredFPS = 15
+      end
+  group: Display Modes
+  id: viewer.preferredFPS
+  name: viewer.preferredFPS
+  parameters:
+  - description: >
+      Either 0, 15, 30, 60 or 120
+    name: preferredFPS
+  syntax: |
+    viewer.preferredFPS = 30
+  returns: The current display mode
+#---------------------------------
+
+#---------------------------------
+# viewer.isPresenting
+#---------------------------------
+- category: property
+  description: >
+    Returns a boolean indicating whether the viewer is presenting
+    an alert or share sheet, or there is some other view obscuring
+    the viewer
+  examples:
+  - example: |
+      function draw()
+          if viewer.isPresenting == false then
+              -- Do something
+          end
+      end
+  group: Display Modes
+  id: viewer.isPresenting
+  name: viewer.isPresenting
+  parameters:
+  - description: >
+      true if the viewer is presenting a view
+    name: isPresenting
+  syntax: |
+    viewer.isPresenting
+  returns: Whether the viewer is presenting a view
+#---------------------------------
+
+#---------------------------------
+# FULLSCREEN
+#---------------------------------                    
+- category: const
+  description: Use this value for `viewer.mode` to set the viewer to fullscreen
+    mode. The Back, Pause, Play and Reset buttons will still be visible in the lower
+    left corner of the screen.
+  group: Display Modes
+  id: FULLSCREEN
+  name: FULLSCREEN
+  related:
+  - viewer.mode
+  syntax: FULLSCREEN
+#---------------------------------
+                   
+#---------------------------------
+# STANDARD
+#---------------------------------                        
+- category: const
+  description: >
+    When set on `viewer.mode` this sets the viewer to standard screen mode.
+    You will be able to see the output and parameters panes to the left of the viewer,
+    and the Back, Pause, Play and Reset buttons will be visible in the lower left
+    corner of the screen.
+    
+  group: Display Modes
+  id: STANDARD
+  name: STANDARD
+  related:
+  - viewer.mode
+  syntax: |
+    viewer.mode = STANDARD
+#---------------------------------
+
+#---------------------------------
+# OVERLAY
+#---------------------------------                        
+- category: const
+  description: >
+    This value is used with `viewer.mode` to set the viewer to overlay screen mode.
+    In this mode you will be able to see the output and parameter panes overlaid on
+    the viewer, the panes are semi-transparent in this mode so that you can see your 
+    content through them.
+  group: Display Modes
+  id: OVERLAY
+  name: OVERLAY
+  related:
+  - viewer.mode
+  syntax: |
+    viewer.mode = OVERLAY
+#---------------------------------
+                   
+#---------------------------------
+# FULLSCREEN_NO_BUTTONS
+#---------------------------------                          
+- category: const
+  description: >
+    Set this value on `viewer.mode` to set the viewer to fullscreen
+    mode and hide *all* buttons on the screen. Note: you will not be able
+    to exit the viewer unless you implement your own call to the `viewer.close()`
+    function. You can force the standard Back button to appear by triple-tapping
+    the screen with three fingers.
+  group: Display Modes
+  id: FULLSCREEN_NO_BUTTONS
+  name: FULLSCREEN_NO_BUTTONS
+  related:
+  - viewer.mode
+  - viewer.close
+  syntax: |
+    viewer.mode = FULLSCREEN_NO_BUTTONS
+#---------------------------------
+                   
+#---------------------------------
+# Layout Overview
+#---------------------------------     
+- category: overview
+  description: >
+    Codea will run your projects in any configuration your device supports, this could be in portrait or landscape orientation, in a split-view environment, or with the sidebar taking up space in your view.
+
+
+    Some devices include "safe areas," these areas are regions of the screen in which you should avoid rendering your content. You can access the safe area insets through the `layout.safeArea` property. These values are insets, and represent how much you should inset your content from the respective edge of the view in order to ensure it remains visible and interactive.
+
+
+    When the view size changes, Codea calls the global function `sizeChanged( width, height )` and passes it the new view size.
+    
+  examples:
+  - example: |
+      function setup()
+      end
+      
+      function sizeChanged( newWidth, newHeight )
+          -- This function gets called when
+          -- the view size changes
+      end
+  group: Layout
+  id: layoutOverview
+  name: Layout Overview
+  related:
+  - layout.horizontal
+  - layout.vertical
+  - layout.safeArea
+  - CurrentOrientation
+#---------------------------------
+
+#---------------------------------
+# layout.safeArea
+#---------------------------------
+- category: const
+  description: >
+    This property contains a table specifying the current safe area insets of the viewer, access them by using `layout.safeArea.top`, `layout.safeArea.bottom`, `layout.safeArea.left`, and `layout.safeArea.right`
+
+
+    The safe area insets indicate how far from the respective edge of the screen you should avoid rendering your content into. For example, a safe area inset of `60` on the top edge might indicate your code is running on a device with a notched display, and so you should offset your interactive content `60` points from the top of the view in order to ensure its visibility.
+
+  examples:
+  - example: |
+      function setup()
+          -- We might have a bottom safe area
+          --  inset if we are running on a
+          --  device with an on-screen home
+          --  indicator
+
+          print(layout.safeArea.bottom)
+      end
+  group: Layout
+  id: layout.safeArea
+  name: layout.safeArea
+  parameters:
+  - description: >
+      number, the safe area inset for the top of the viewer
+    name: top
+  - description: >
+      number, the safe area inset for the left of the viewer
+    name: left
+  - description: >
+      number, the safe area inset for the bottom of the viewer
+    name: bottom
+  - description: >
+      number, the safe area inset for the right of the viewer
+    name: right
+  related:
+  - layoutOverview
+#---------------------------------
+
+#---------------------------------
+# layout.horizontal
+#---------------------------------
+- category: const
+  description: >
+    This property specifies whether the viewer is running in a regular or compact horizontal layout mode. For example, when running Codea in split-view the horizontal layout mode of the viewer may switch to compact. You can use this property to switch your application into a state which may better deal with a smaller screen area.
+
+
+    The value of this property can be `layout.COMPACT`, `layout.REGULAR`, or `layout.UNSPECIFIED`
+
+  examples:
+  - example: |
+      -- This example prints the size class whenever
+      --  the viewer size changes, try adjusting into
+      --  split-view and back to see the mode change
+
+      function sizeChanged(w, h)
+          printSizeClass()
+      end
+
+      function printSizeClass()
+          if layout.horizontal == layout.REGULAR then
+              print("Regular size")
+          else
+              print("Compact size")
+          end
+      end
+  group: Layout
+  id: layout.horizontal
+  name: layout.horizontal
+  related:
+  - layoutOverview
+  - layout.vertical
+#---------------------------------
+
+#---------------------------------
+# layout.vertical
+#---------------------------------
+- category: const
+  description: >
+    This property specifies whether the viewer is running in a regular or compact vertical layout mode. The vertical layout class may change when switching from portrait to landscape orientation on certain devices. Use this property to react accordingly.
+
+
+    The value of this property can be `layout.COMPACT`, `layout.REGULAR`, or `layout.UNSPECIFIED`
+
+  group: Layout
+  id: layout.vertical
+  name: layout.vertical
+  related:
+  - layoutOverview
+  - layout.horizontal
+#---------------------------------
+
+#---------------------------------
+# layout.COMPACT
+#---------------------------------
+- category: const
+  description: >
+    This value indicates a compact layout environment for the specified dimension
+
+  group: Layout
+  id: layout.COMPACT
+  name: layout.COMPACT
+  related:
+  - layoutOverview
+  - layout.horizontal
+  - layout.vertical
+#---------------------------------
+
+#---------------------------------
+# layout.REGULAR
+#---------------------------------
+- category: const
+  description: >
+    This value indicates a regular layout environment for the specified dimension
+
+  group: Layout
+  id: layout.REGULAR
+  name: layout.REGULAR
+  related:
+  - layoutOverview
+  - layout.horizontal
+  - layout.vertical
+#---------------------------------
+
+#---------------------------------
+# CurrentOrientation
+#---------------------------------     
+- category: const
+  description: >
+    This global contains the current orientation and can be one of
+    the following: `PORTRAIT`, `PORTRAIT_UPSIDE_DOWN`, `LANDSCAPE_LEFT`, `LANDSCAPE_RIGHT`.
+  group: Layout
+  id: CurrentOrientation
+  name: CurrentOrientation
+  related:
+  - PORTRAIT
+  - PORTRAIT_UPSIDE_DOWN
+  - LANDSCAPE_LEFT
+  - LANDSCAPE_RIGHT
+#---------------------------------                
+                   
+#---------------------------------
+# PORTRAIT
+#---------------------------------     
+- category: const
+  description: Check for this value in `CurrentOrientation` to detect if the
+    device is in standard portrait orientation (home button at the bottom).
+  group: Layout
+  id: PORTRAIT
+  name: PORTRAIT
+  related:
+  - CurrentOrientation
+  - PORTRAIT_UPSIDE_DOWN
+  syntax: CurrentOrientation == PORTRAIT
+#---------------------------------
+                   
+#---------------------------------
+# PORTRAIT_UPSIDE_DOWN
+#---------------------------------     
+- category: const
+  description: Check for this value in `CurrentOrientation` to detect if the
+    device is in inverted portrait orientation (home button at the top).
+  group: Layout
+  id: PORTRAIT_UPSIDE_DOWN
+  name: PORTRAIT_UPSIDE_DOWN
+  related:
+  - CurrentOrientation
+  - PORTRAIT
+  syntax: CurrentOrientation == PORTRAIT_UPSIDE_DOWN
+#---------------------------------
+                   
+#---------------------------------
+# LANDSCAPE_LEFT
+#---------------------------------     
+- category: const
+  description: Check for this value in `CurrentOrientation` to detect if the
+    device is in landscape left orientation (home button on left).
+  group: Layout
+  id: LANDSCAPE_LEFT
+  name: LANDSCAPE_LEFT
+  related:
+  - CurrentOrientation
+  - LANDSCAPE_RIGHT
+  syntax: CurrentOrientation == LANDSCAPE_LEFT
+#---------------------------------
+                   
+#---------------------------------
+# LANDSCAPE_RIGHT
+#---------------------------------     
+- category: const
+  description: Check for this value in `CurrentOrientation` to detect if the
+    device is in landscape right orientation (home button on right).
+  group: Layout
+  id: LANDSCAPE_RIGHT
+  name: LANDSCAPE_RIGHT
+  related:
+  - CurrentOrientation
+  - LANDSCAPE_LEFT
+  syntax: CurrentOrientation == LANDSCAPE_RIGHT
+#---------------------------------
+                   
+#---------------------------------
+# Using the Keyboard
+#---------------------------------     
+- category: overview
+  description: |
+    You can use the keyboard in Codea to receive text input in your projects. In order to begin receiving keyboard events, call the `showKeyboard()` function. This will show the on-screen keyboard, unless an external keyboard is present. When key presses are made Codea calls the global function `keyboard( key )`. You must implement this function to receive keyboard events.
+    
+        function keyboard( key )
+            print("Key pressed: '".. key .."'")
+        end
+        
+    Alternatively you can read the current keyboard buffer by calling `keyboardBuffer()`. See the `keyboardBuffer()` documentation for an example.
+  group: Showing and Hiding the Keyboard
+  id: keyboardOverview
+  name: Using the Keyboard
+  related:
+  - showKeyboard
+  - hideKeyboard
+  - isKeyboardShowing
+  - keyboardBuffer
+#---------------------------------
+                   
+#---------------------------------
+# showKeyboard
+#---------------------------------     
+- category: function
+  description: This function enables keyboard input and displays the software
+    keyboard if necessary. After calling `showKeyboard()`, keyboard events
+    will be delivered to a global function `keyboard( key )`. The current keyboard
+    buffer can be read with the `keyboardBuffer()` function.
+  examples:
+  - example: |
+      function touched(touch)
+          --Show keyboard when the screen is touched
+          showKeyboard()
+      end
+  group: Showing and Hiding the Keyboard
+  id: showKeyboard
+  name: showKeyboard()
+  related:
+  - hideKeyboard
+  - isKeyboardShowing
+  - keyboardBuffer
+  syntax: showKeyboard()
+#---------------------------------
+                   
+#---------------------------------
+# hideKeyboard
+#---------------------------------     
+- category: function
+  description: This function disables keyboard input and hides the software keyboard
+    if necessary.
+  group: Showing and Hiding the Keyboard
+  id: hideKeyboard
+  name: hideKeyboard()
+  related:
+  - showKeyboard
+  - isKeyboardShowing
+  - keyboardBuffer
+  syntax: hideKeyboard()
+#---------------------------------
+
+#---------------------------------
+# isKeyboardShowing
+#---------------------------------     
+- category: function
+  description: This function returns whether the keyboard is currently active in the viewer.
+  group: Showing and Hiding the Keyboard
+  id: isKeyboardShowing
+  name: isKeyboardShowing()
+  returns: >
+    `true` if the keyboard is showing, `false` if not
+  related:
+  - showKeyboard
+  - hideKeyboard
+  - keyboardBuffer
+  syntax: isKeyboardShowing()
+#---------------------------------
+                   
+#---------------------------------
+# keyboardBuffer
+#---------------------------------     
+- category: function
+  description: This function reads the current keyboard buffer. Note that the
+    keyboard buffer is cleared when the keyboard is shown.
+  examples:
+  - example: |
+      function touched(touch)
+          --Show keyboard when the screen is touched
+          showKeyboard()
+      end
+      
+      function draw()
+          background(40,40,50)
+          fill(255)
+          textMode(CORNER)
+          buffer = keyboardBuffer()
+          
+          _,bufferHeight = textSize(buffer)
+          
+          if buffer then
+              text( buffer, 10, HEIGHT - 30 - bufferHeight )
+          end
+      end
+  group: Showing and Hiding the Keyboard
+  id: keyboardBuffer
+  name: keyboardBuffer()
+  related:
+  - showKeyboard
+  - hideKeyboard
+  returns: Contents of keyboard buffer as a string
+  syntax: buffer = keyboardBuffer()
+#---------------------------------
+                   
+#---------------------------------
+# BACKSPACE
+#---------------------------------     
+- category: const
+  description: You can use this to check whether the key delivered to the global
+    `keyboard( key )` function was the backspace key..
+  examples:
+  - example: |
+      function keyboard(key)
+          -- Did the user press backspace?
+          if key == BACKSPACE then
+              -- Do something
+          end
+      end
+  group: Showing and Hiding the Keyboard
+  id: BACKSPACE
+  name: BACKSPACE
+  related:
+  - keyboardOverview
+  - showKeyboard
+  syntax: BACKSPACE
+#---------------------------------
+                   
+#---------------------------------
+# startRecording
+#---------------------------------     
+- category: function
+  description: This function initiates the video recording feature of Codea.
+    To stop video recording use the `stopRecording()` function. This function
+    is identical to pressing the video record button in the viewer interface. Do
+    not call this function in your `setup()` function.
+  group: Recording Video of Your Project
+  id: startRecording
+  name: startRecording()
+  related:
+  - stopRecording
+  - isRecording
+  syntax: startRecording()
+#---------------------------------
+                   
+#---------------------------------
+# stopRecording
+#---------------------------------     
+- category: function
+  description: Use this function to stop Codea's video recording feature and
+    save the recorded video to the device's camera roll.
+  group: Recording Video of Your Project
+  id: stopRecording
+  name: stopRecording()
+  related:
+  - startRecording
+  - isRecording
+  syntax: stopRecording()
+#---------------------------------
+                   
+#---------------------------------
+# isRecording
+#---------------------------------     
+- category: function
+  description: Use this function to programatically determine whether Codea is
+    currently recording the screen.
+  group: Recording Video of Your Project
+  id: isRecording
+  name: isRecording()
+  related:
+  - startRecording
+  - stopRecording
+  returns: Boolean, whether Codea is recording the screen
+  syntax: isRecording()
+#---------------------------------
+                   
+#---------------------------------
+# viewer.retainedBacking
+#---------------------------------     
+- category: property
+  description: Gets or sets the backing mode of the viewer. The default, `false`,
+    is the fastest drawing mode and **may not preserve** the contents of the
+    previously drawn frame when setting up next frame.
+    
+    
+    Set this to `true` force the viewer to copy the contents of the previous frame
+    into the current frame each time `draw()` is called. This is useful for
+    projects that need to paint onto the screen and preserve the screen's contents,
+    for example, painting or drawing applications.
+  examples:
+  - example: |
+      function setup()
+          --Use a standard backing mode (default)
+          viewer.retainedBacking = false
+      end
+  - example: |
+      function setup()
+          --Use a retained backing mode
+          viewer.retainedBacking = true
+      end
+  group: Backing Types
+  id: viewer.retainedBacking
+  name: viewer.retainedBacking
+  parameters:
+  - description: >
+      Either `true` or `false`
+    name: retainedBacking
+  related:
+  - viewer.mode
+  syntax: viewer.retainedBacking = true | false
+#---------------------------------
+                   
+#---------------------------------
+# viewer.close
+#---------------------------------     
+- category: function
+  description: Closes the viewer and returns to the editor. Calling `viewer.close()`
+    is functionally the same as pressing the on-screen Back button. This function
+    is useful if you are using `viewer.mode` with the `FULLSCREEN_NO_BUTTONS`
+    mode
+  examples:
+  - example: |
+      function touched(touch)
+          --Exit if user taps
+          if touch.tapCount == 1 and touch.state == ENDED then
+              viewer.close()
+          end
+      end
+  group: Viewer Actions
+  id: viewer.close
+  name: viewer.close()
+  related:
+  - viewer.mode
+  - FULLSCREEN_NO_BUTTONS
+  syntax: viewer.close()
+  
+#---------------------------------
+# viewer.restart
+#---------------------------------     
+- category: function
+  description: Restarts the viewer, starting your project again. Calling `viewer.restart()`
+    is functionally the same as pressing the on-screen Restart button. You can use
+    this function to restart your game, for example.
+  examples:
+  - example: |
+      function touched(touch)
+          --Restart if user taps
+          if touch.tapCount == 1 and touch.state == ENDED then
+              viewer.restart()
+          end
+      end
+  group: Viewer Actions
+  id: viewer.restart
+  name: viewer.restart()
+  related:
+  - viewer.close
+  syntax: viewer.restart()
+  
+#---------------------------------
+# viewer.snapshot
+#---------------------------------
+- category: function
+  description: >
+    Captures the contents of the screen and returns it as an `image`
+    
+    
+    Note this only includes the rendered portion of your scene and does not include the
+    sidebar UI
+  examples:
+  - example: |
+      function touched(touch)
+          -- Capture the screen on tap
+          if touch.tapCount == 1 and touch.state == ENDED then
+              snapshot = viewer.snapshot()
+          end
+      end
+  group: Viewer Actions
+  id: viewer.snapshot
+  name: viewer.snapshot()
+  related:
+  - image
+  syntax: local img = viewer.snapshot()
+  returns: image, the contents of the screen
+  
+#---------------------------------
+# viewer.alert
+#---------------------------------     
+- category: function
+  description: >
+    Brings up a system alert view. The `message` parameter specifies
+    the message to display. The optional `title` parameter provides the title of
+    the alert view. If no title is specified, the title "Alert" is used.
+  examples:
+  - example: |
+      function touched(touch)
+          --Show alert if user taps
+          if touch.tapCount == 1 and touch.state == ENDED then
+              viewer.alert( "Hello World" )
+          end
+      end
+  group: Viewer Actions
+  parameters:
+  - description: string, message to display
+    name: message
+  - description: string, title of alert view
+    name: title
+  id: viewer.alert
+  name: viewer.alert()
+  syntax: |
+    viewer.alert( message )
+    viewer.alert( message, title )
+  
+#---------------------------------
+# viewer.share
+#---------------------------------
+- category: function
+  description: >
+    Brings up a system share view for an image or text string. This allows you
+    to share content to a third-party service, save it to your device, or copy
+    it to the pasteboard.
+  examples:
+  - example: |
+      function touched(touch)
+          --Share the contents of the screen on tap
+          if touch.tapCount == 1 and touch.state == ENDED then
+              viewer.share(viewer.snapshot())
+          end
+      end
+  group: Viewer Actions
+  parameters:
+  - description: image or string, content to share
+    name: content
+  id: viewer.share
+  name: viewer.share()
+  syntax: |
+    viewer.share( image )
+    viewer.share( string )
+  

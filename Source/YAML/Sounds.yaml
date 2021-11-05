@@ -1,0 +1,1091 @@
+id: sounds
+name: Sounds
+subtitle: Playing and Sound and Music
+ordering:
+    - Music
+    - Sounds
+    - Speech
+    - Microphone
+functions:
+#---------------------------------
+# music
+#---------------------------------
+- category: function
+  description: >
+    Calling this function immediately plays the music track specified by `asset`.
+    The `loop` parameter controls whether the music track plays continuously,
+    or stops when finished.
+
+
+    Only one music track can be played at a time. You can modify the currently
+    playing music track by accessing elements of the `music` table, such as
+    `music.volume`.
+
+    
+    Do *not* call this function repeatedly in your draw loop. The `music` function
+    is intended to be called *once* each time you wish to start playing music, or
+    when you wish to change music tracks.
+  examples:
+  - example: |
+      -- play a music track
+      music( asset.builtin.A_Hero_s_Quest.Battle )
+  - example: |
+      -- play a looping music track
+      music( asset.builtin.A_Hero_s_Quest.Battle, true )
+  - example: |
+      -- play a track and control the volume
+      -- with a parameter
+      music( asset.builtin.A_Hero_s_Quest.Battle, true )
+      
+      parameter.number( "Volume", 0, 1, 1,
+        function(val)
+          music.volume = val
+        end
+  group: Music
+  id: music
+  name: music( asset )
+  parameters:
+  - description: >
+      asset key, the asset key of the music track to play
+    name: asset
+    
+  - description: boolean, specifies whether this track should continue playing in a loop
+    name: loop
+    
+  - description: number, the initial volume of playback from 0.0 to 1.0
+    name: volume
+
+  - description: number, the stereo panning of playback, from -1.0 to 1.0
+    name: pan
+    
+  related:
+  - sound
+  
+  syntax: |
+    music( asset )
+    music( asset, loop )
+    music( asset, loop, volume )
+    music( asset, loop, volume, pan )
+#---------------------------------
+
+
+#---------------------------------
+# music.volume
+#---------------------------------           
+- category: const
+  description: This variable controls the currently playing music track's volume. It ranges from 0.0 to 1.0.
+  group: Music
+  id: music.volume
+  name: music.volume
+  related:
+  - music
+  returns: Volume of the currently playing music track
+  syntax: |
+    -- Getting
+    vol = music.volume
+    
+    -- Setting
+    music.volume = 0.5
+#---------------------------------
+
+#---------------------------------
+# music.pan
+#---------------------------------
+- category: const
+  description: This variable controls the currently playing music track's stereo panning. It ranges from -1.0 to 1.0.
+  group: Music
+  id: music.pan
+  name: music.pan
+  related:
+  - music
+  returns: Panning amount of the currently playing music track
+  syntax: |
+    -- Getting
+    pan = music.pan
+    
+    -- Setting
+    music.pan = -1.0
+#---------------------------------
+
+#---------------------------------
+# music.currentTime
+#---------------------------------
+- category: const
+  description: This variable controls the seek position of the currently playing music track. It ranges 
+    from 0.0 (start of the track) to `music.duration` (end of the track).
+  group: Music
+  id: music.currentTime
+  name: music.currentTime
+  related:
+  - music.duration
+  - music
+  returns: Current time into the playing music track
+  syntax: |
+    -- Getting
+    time = music.currentTime
+    
+    -- Setting
+    music.currentTime = music.duration * 0.5
+#---------------------------------
+
+#---------------------------------
+# music.paused
+#---------------------------------
+- category: const
+  description: This variable sets the paused state of the current music track.
+  group: Music
+  id: music.paused
+  name: music.paused
+  related:
+  - music
+  returns: Paused state of the currently music track.
+  syntax: |
+    -- Getting
+    isPaused = music.paused
+    
+    -- Setting
+    music.paused = true
+#---------------------------------
+
+#---------------------------------
+# music.muted
+#---------------------------------
+- category: const
+  description: This variable controls whether the music track is currently muted.
+  group: Music
+  id: music.muted
+  name: music.muted
+  related:
+  - music
+  returns: Whether the current track is muted
+  syntax: |
+    -- Getting
+    muted = music.muted
+    
+    -- Setting
+    music.muted = true
+#---------------------------------
+
+#---------------------------------
+# music.duration
+#---------------------------------
+- category: const
+  description: Read only. This variable returns the length of the current music track in seconds.
+  group: Music
+  id: music.duration
+  name: music.duration
+  related:
+  - music.currentTime
+  - music
+  returns: Length of the current music track in seconds.
+  syntax: |
+    duration = music.duration
+#---------------------------------
+
+#---------------------------------
+# music.channels
+#---------------------------------
+- category: const
+  description: Read only. This variable returns the number of channels supported by the current track (usually 1 or 2).
+  group: Music
+  id: music.channels
+  name: music.channels
+  related:
+  - music
+  returns: Number of channels supported by the current track.
+  syntax: |
+    channels = music.channels
+#---------------------------------
+
+#---------------------------------
+# music.name
+#---------------------------------
+- category: const
+  description: Read only. This value returns the asset string of the currently playing music.
+  group: Music
+  id: music.name
+  name: music.name
+  related:
+  - music
+  returns: Asset string of current music track
+  syntax: |
+    print( music.name )
+#---------------------------------
+
+#---------------------------------
+# music.stop()
+#---------------------------------
+- category: function
+  description: Stops the currently playing music track.
+  group: Music
+  id: music.stop
+  name: music.stop()
+  related:
+  - music
+  syntax: |
+    music.stop()
+#---------------------------------
+
+
+#---------------------------------
+# sound
+#---------------------------------
+- category: function
+  description: >
+    Calling this function immediately plays a sound effect, or a randomly generated
+    sound with a type specified by `name` or encoded with the given parameters.
+
+
+    If using a sound asset (a sound from an asset pack) the `sound` function accepts
+    the following optional parameters: `volume`, `pitch`, `pan` and `loop`. Please
+    see the parameter table for an explanation of these.
+
+    
+    `sound()`
+    can use sfxr to randomly generate sounds of a given type. The `name` parameter
+    is a string specifying the type of sound (see related items), and the `seed`
+    parameter allows you to choose a particular random sound. Sounds with the same
+    name and seed always sound the same. If no `seed` is specified the resulting
+    sound will be a random sound of the specified type. If a `parameterTable` is
+    passed in, those values are used to generate the sound.
+    
+
+    Do *not* call this function repeatedly in your draw loop. The `sound` function
+    is intended to be called when you wish to play a sound effect (on a game event
+    such as the player getting hit).
+  examples:
+  - example: |
+      -- play some sound assets
+      sound( asset.builtin.A_Hero_s_Quest.Arrow_Shoot_1 )
+      
+      -- At half volume
+      sound( asset.builtin.A_Hero_s_Quest.Arrow_Shoot_1, 0.5 )
+      
+      -- Looping
+      sound( asset.builtin.A_Hero_s_Quest.Arrow_Shoot_1,
+        1.0, 1.0, 0.0, true )
+  - example: |
+      -- play a random jump sound
+      sound( SOUND_JUMP )
+
+      -- play a specific jump sound
+      sound( SOUND_JUMP, 1234 )
+  - example: |
+      -- using the table to define properties
+      sound( { Waveform = SOUND_NOISE,
+               AttackTime = 1.2,
+               SustainTime = 1 } )
+  group: Sounds
+  id: sound
+  name: sound( name )
+  parameters:
+  - description: >
+      asset, the sound effect asset or type of sound to play
+      
+      
+      This can be an asset name, such as *asset.builtin.A_Hero_s_Quest.Arrow_Shoot_1* or it can be used to specify a randomly generated sound
+      effect from the following: `SOUND_BLIT`, `SOUND_EXPLODE`, `SOUND_HIT`, `SOUND_JUMP`, `SOUND_PICKUP`, `SOUND_POWERUP`, 
+      `SOUND_RANDOM` or `SOUND_SHOOT`.
+      
+      
+      Can also be `DATA`
+      followed by a base64 string encoding the parameters which is generated by
+      Codea based on the sound picker panel properties and should not be edited
+    name: name
+    
+  - description: number, specifies the volume of the sound effect from 0.0 to 1.0 
+      (only for sounds from an asset pack)
+    name: volume
+    
+  - description: number, specifies the pitch of the sound effect, where 1.0 is
+      the normal pitch (only for sounds from an asset pack)
+    name: pitch
+    
+  - description: number, specifies the stereo panning of the sound effect from -1.0 to 1.0
+      (only for sounds from an asset pack)
+    name: pan
+    
+  - description: boolean, specifies whether this sound effect plays on a loop
+      (only for sounds from an asset pack)
+    name: loop
+
+  - description: int, specifies the random seed to use when generating a sound of
+      this type
+    name: seed
+    
+  - description: soundbuffer, specifies the raw sound data to play
+    name: buffer
+    
+  - description: >  
+      table, specifies the parameters to use when generating a sound.
+      This is an advanced option, the parameters will change the noise in subtle
+      ways. Play with the Sounds Plus example app to see what these parameters do.
+      Any missing keys will cause the sound to use a default value for that parameter
+      
+
+      The table can contain the following (case sensitive) keys:
+
+          Waveform - The synthesizer waveform to use, can be SOUND_NOISE, SOUND_SAWTOOTH, SOUND_SINEWAVE, or SOUND_SQUAREWAVE
+      
+          AttackTime - number
+      
+          SustainTime - number
+      
+          SustainPunch - number
+      
+          DecayTime - number
+      
+          StartFrequency - number
+      
+          MinimumFrequency - number
+      
+          Slide - number
+      
+          DeltaSlide - number
+      
+          VibratoDepth - number
+      
+          VibratoSpeed - number
+      
+          ChangeAmount - number
+      
+          ChangeSpeed - number
+      
+          SquareDuty - number
+      
+          DutySweep - number
+      
+          RepeatSpeed - number
+      
+          PhaserSweep - number
+      
+          LowPassFilterCutoff - number
+      
+          LowPassFilterCutoffSweep - number
+      
+          LowPassFilterResonance - number
+      
+          HighPassFilterCutoff - number
+      
+          HighPassFilterCutoffSweep - number
+      
+          Volume - number
+    name: parameterTable
+    
+  related:
+  - SOUND_BLIT
+  - SOUND_EXPLODE
+  - SOUND_HIT
+  - SOUND_JUMP
+  - SOUND_PICKUP
+  - SOUND_POWERUP
+  - SOUND_RANDOM
+  - SOUND_SHOOT
+  - SOUND_NOISE
+  - soundbuffer
+  - SOUND_SQUAREWAVE
+  - SOUND_SINEWAVE
+  - SOUND_SAWTOOTH
+  
+  syntax: |
+    -- For sound assets
+    sound( name, volume )
+    sound( name, volume, pitch )
+    sound( name, volume, pitch, pan )
+    sound( name, volume, pitch, pan, loop )
+    
+    -- For generated sounds
+    sound( name )
+    sound( name, seed )
+    sound( parameterTable )
+    sound( buffer )
+#---------------------------------
+      
+#---------------------------------
+# soundbuffer
+#---------------------------------       
+- category: type
+  description: This object represents a sound buffer containing arbitrary audio
+    data. You may create `soundbuffer` objects using `soundbuffer( data,
+    format, freq )` where the data is uncompressed PCM audio and the format is
+    one of `FORMAT_MONO8`, `FORMAT_MONO16`, `FORMAT_STEREO8`, or `FORMAT_STEREO16`.
+    
+  examples:
+  - example: |
+      -- Creating a sound buffer object
+      function setup()
+          tap = false
+          parameter.integer("freq",1,4000,800)
+          parameter.number("length",0.1,1,0.5)            
+      end
+      
+      function makeBuffer()
+          local data = ""
+          datum="\0\xAD\""
+          numSamples = freq * length
+          
+          for i = 1,numSamples/#datum do
+              data = data .. datum
+          end
+          
+          return soundbuffer( data, FORMAT_MONO8, freq )
+      end
+      
+      function touched(touch)
+          if touch.state == ENDED and
+             touch.tapCount == 1 then
+             tap = true
+          end
+      end
+      
+      function draw()
+          background(0)
+          
+          if tap then
+              b = makeBuffer()
+              sound(b)
+              tap = false
+          end            
+      end
+      
+  group: Sounds
+  id: soundbuffer
+  name: soundbuffer( data, format, freq )
+  parameters:
+  - description: string, uncompressed audio data
+    name: data
+  - description: >
+      `FORMAT_MONO8`, `FORMAT_MONO16`, `FORMAT_STEREO8` or `FORMAT_STEREO16` 
+    name: format
+  - description: integer, the frequency of the data
+    name: freq
+  related:
+  - sound
+  returns: A new soundbuffer object
+  syntax: soundbuffer( data, format, freq )
+#---------------------------------
+      
+#---------------------------------
+# soundBufferSize
+#---------------------------------     
+- category: function
+  description: Calling this function will set the maximum buffer size for sounds.
+    Sounds are stored in a buffer so that they do not need to be recreated if reused.
+    Sounds are removed from this buffer on a least recently used basis when the
+    buffer is full and a new sound is added. For example, if the buffer is 2 megabytes
+    (the default), and we add a sound that puts it over the limit, the sound we
+    used the longest time ago is removed from the buffer and will have to be re-created
+    if played again. Generating the sound data can take a considerable amount of
+    time for longer sounds.Playing a sound at 0 volume counts as playing
+    and can be used to keep a sound in the cache (and to pre-generate a sound in
+    the setup function.) Calling this method with 0 for the size sets the
+    buffer to no limit. This can cause Codea to crash if too many sounds are generated
+    as it may run out of memory.Calling this with no parameters returns the
+    max size and current size of the buffer.
+  examples:
+  - example: |
+      -- setting the sound buffer maximum size
+      soundBufferSize( 3 )
+  - example: |
+      -- reading the current maximum size and used size
+      maxSize, usedSize = nsoundBufferSize()
+  - example: |
+      -- setting to no limit
+      soundBufferSize(0)
+  group: Sounds
+  id: soundBufferSize
+  name: soundBufferSize( size )
+  parameters:
+  - description: number, the maximum size of the buffer in megabytes. This can be
+      a fraction. If this is 0, the buffer size is unlimited. An unlimited buffer
+      size can cause Codea to crash if it runs out of memory, so take care if it
+      is used.
+    name: size
+  related:
+  - sound
+  returns: >
+    If no parameters are given, a pair of values: maxBufferSize, currentBufferSize
+  syntax: |
+    soundBufferSize( size )
+    soundBufferSize()
+#---------------------------------
+      
+#---------------------------------
+# SOUND_JUMP
+#---------------------------------           
+- category: const
+  description: This constant specifies a jump sound. Similar to a character jumping
+    in a platform game.
+  group: Sounds
+  id: SOUND_JUMP
+  name: SOUND_JUMP
+  related:
+  - sound
+  returns: The string "jump"
+  syntax: SOUND_JUMP
+#---------------------------------
+      
+#---------------------------------
+# SOUND_HIT
+#---------------------------------               
+- category: const
+  description: This constant specifies a hit sound. For example, when the enemy
+    collides with the player.
+  group: Sounds
+  id: SOUND_HIT
+  name: SOUND_HIT
+  related:
+  - sound
+  returns: The string "hit"
+  syntax: SOUND_HIT
+#---------------------------------
+      
+#---------------------------------
+# SOUND_PICKUP
+#---------------------------------     
+- category: const
+  description: This constant specifies a pickup sound. For example, collecting coins
+    in a game.
+  group: Sounds
+  id: SOUND_PICKUP
+  name: SOUND_PICKUP
+  related:
+  - sound
+  returns: The string "pickup"
+  syntax: SOUND_PICKUP
+#---------------------------------
+      
+#---------------------------------
+# SOUND_POWERUP
+#---------------------------------     
+- category: const
+  description: This constant specifies a powerup sound. For example, collecting
+    bonuses in a game.
+  group: Sounds
+  id: SOUND_POWERUP
+  name: SOUND_POWERUP
+  related:
+  - sound
+  returns: The string "powerup"
+  syntax: SOUND_POWERUP
+#---------------------------------
+      
+#---------------------------------
+# SOUND_SHOOT
+#---------------------------------     
+- category: const
+  description: This constant specifies a shooting sound. For example, firing a bullet
+    in a game.
+  group: Sounds
+  id: SOUND_SHOOT
+  name: SOUND_SHOOT
+  related:
+  - sound
+  returns: The string "shoot"
+  syntax: SOUND_SHOOT
+#---------------------------------
+      
+#---------------------------------
+# SOUND_EXPLODE
+#---------------------------------     
+- category: const
+  description: This constant specifies an explosion sound. For example, a space
+    ship blowing up.
+  group: Sounds
+  id: SOUND_EXPLODE
+  name: SOUND_EXPLODE
+  related:
+  - sound
+  returns: The string "explode"
+  syntax: SOUND_EXPLODE
+#---------------------------------
+      
+#---------------------------------
+# SOUND_BLIT
+#---------------------------------     
+- category: const
+  description: This constant specifies a generic "blit" sound.
+  group: Sounds
+  id: SOUND_BLIT
+  name: SOUND_BLIT
+  related:
+  - sound
+  returns: The string "blit"
+  syntax: SOUND_BLIT
+#---------------------------------
+      
+#---------------------------------
+# SOUND_RANDOM
+#---------------------------------     
+- category: const
+  description: This constant specifies a randomly generated sound. You can use this
+    in conjunction with the seed value of the `sound()` function to find a
+    sound that you like.
+  group: Sounds
+  id: SOUND_RANDOM
+  name: SOUND_RANDOM
+  related:
+  - sound
+  returns: The string "random"
+  syntax: SOUND_RANDOM
+#---------------------------------
+      
+#---------------------------------
+# SOUND_NOISE
+#---------------------------------     
+- category: const
+  description: This specifices to use a white noise function as the waveform for
+    this sound
+  group: Sounds
+  id: SOUND_NOISE
+  name: SOUND_NOISE
+  related:
+  - sound
+  returns: The integer 3
+  syntax: SOUND_NOISE
+#---------------------------------
+      
+#---------------------------------
+# SOUND_SAWTOOTH
+#---------------------------------     
+- category: const
+  description: This specifices to use a sawtooth function as the waveform for this
+    sound
+  group: Sounds
+  id: SOUND_SAWTOOTH
+  name: SOUND_SAWTOOTH
+  related:
+  - sound
+  returns: The integer 1
+  syntax: SOUND_SAWTOOTH
+#---------------------------------
+      
+#---------------------------------
+# SOUND_SINEWAVE
+#---------------------------------     
+- category: const
+  description: This specifices to use a sine wave function as the waveform for this
+    sound
+  group: Sounds
+  id: SOUND_SINEWAVE
+  name: SOUND_SINEWAVE
+  related:
+  - sound
+  returns: The integer 2
+  syntax: SOUND_SINEWAVE
+#---------------------------------
+      
+#---------------------------------
+# SOUND_SQUAREWAVE
+#---------------------------------     
+- category: const
+  description: This specifices to use a square wave function as the waveform for
+    this sound
+  group: Sounds
+  id: SOUND_SQUAREWAVE
+  name: SOUND_SQUAREWAVE
+  related:
+  - sound
+  returns: The integer 0
+  syntax: SOUND_SQUAREWAVE
+
+#---------------------------------
+# speech()
+#---------------------------------
+- id: speech
+  category: type
+  description: >
+    This type represents a spoken utterance that can be played back using the
+    `speech.say()` function. It consists of a string and other properties which
+    determine the volume, speed and pitch of playback.
+
+
+    Multiple utterances can be queued for playback with the `speech.say()` function.
+    The utterances will be separated by their respective `preDelay` and `postDelay`
+    intervals.
+
+
+    Note that `speech` can be used to construct utterances to be used later, but it
+    can also be used as a global table that can be configured for all future speech.
+    See the two examples for both kinds of use.
+
+  examples:
+  - example: |
+      -- This example uses global speech
+      -- functions and settings
+
+      -- Set speech volume for next
+      -- use of speech.say()
+      speech.volume = 0.7
+
+      -- Queue up a sentence
+      speech.say("Hello World")
+
+      -- Raise the pitch
+      speech.pitch = 1.5
+
+      -- Queue up another sentence
+      speech.say("I'm Talking")
+  - example: |
+      -- This example creates actual
+      -- utterance objects
+
+      -- Create an utterance to use
+      local words = speech("Hello World")
+      local moreWords = speech("I'm Talking")
+
+      words.volume = 0.7
+
+      moreWords.pitch = 1.5
+
+      -- Queue up two utterances
+      speech.say( words )
+      speech.say( moreWords )
+  - example: |
+      -- An example of voices
+
+      -- List all voices
+      for _,v in pairs(speech.voices) do
+          print(v)
+      end
+
+      -- Set default language
+      speech.language = "en-GB"
+
+      -- Set specific voice
+      -- (Overrides language setting)
+      speech.voice = speech.voices[1]
+  group: Speech
+  name: speech
+  parameters:
+  - description: string, the utterance to be spoken
+    name: string
+  - description: float, a value between 0.5 and 2.0, raises or lowers the pitch (default is 1.0)
+    name: pitch
+  - description: float, a value between 0.0 and 1.0, the speed at which the utterance is spoken (default is 0.1)
+    name: rate
+  - description: float, the amount of time to wait before speaking this utterance
+    name: preDelay
+  - description: float, the amount of time to wait after speaking this utterance
+    name: postDelay
+  - description: float, a value between 0.0 and 1.0 (default is 1.0)
+    name: volume
+  - description: table, an array of available `voice` objects
+    name: voices
+  - description: voice, the default voice to use for speech, use `nil` for default
+    name: voice
+  - description: string, the language string representing the voice you wish to use
+    name: language
+  related: [speech.say, speech.pause, speech.continue, speech.stop]
+  returns: The newly created utterance to be used with `speech.say`
+  syntax: |
+    speech( string )
+    speech.pitch
+    speech.volume
+    speech.rate
+    speech.preDelay
+    speech.postDelay
+#---------------------------------
+
+#---------------------------------
+# speech.say()
+#---------------------------------
+- id: speech.say
+  category: function
+  description: >
+    This function can be used to speak a particular string or utterance.
+    Calling this function multiple times will add more utterances to the queue to be spoken, it
+    will not stop anything currently being spoken. Use `speech.stop` or `speech.pause` to
+    control playback.
+  examples:
+  - example: |
+      -- Adjust the speech settings
+      speech.volume = 0.6
+
+      -- Just speak some words immediately
+      --  will be spoken at 0.6 volume
+      speech.say("Hello world!")
+
+      -- Adjust settings for next words
+      speech.volume = 1.0
+      speech.pitch = 1.5
+
+      -- Queue up another sentence to speak
+      -- after the above is finished
+      --  will be spoken louder, in high pitch
+      speech.say("I'm talking")
+  group: Speech
+  name: speech.say( string )
+  parameters:
+  - description: string, a string to speak
+    name: string
+  - description: utterance, an utterance to speak
+    name: utterance
+  related: [speech, speech.pause, speech.continue, speech.stop, speech.speaking]
+  syntax: |
+    speech.say( string )
+    speech.say( utterance )
+#---------------------------------
+
+#---------------------------------
+# speech.pause()
+#---------------------------------
+- id: speech.pause
+  category: function
+  description: >
+    This function can be used to pause anything currently being spoken.
+    Speech will pause after the next word by default. Pass a value of `true` to this
+    function to pause speech immediately.
+
+
+    After speech is paused, it can be continued with the `speech.continue()` function.
+
+  examples:
+  - example: |
+      -- Just speak some words immediately
+      speech.say("Hello world!")
+
+      -- Pause it
+      speech.pause()
+
+      -- Later, continue
+      speech.continue()
+  group: Speech
+  name: speech.pause()
+  parameters:
+  - description: boolean, whether to pause immediately or after the next word
+    name: immediate
+  related: [speech.continue, speech.stop, speech.say]
+  syntax: |
+    speech.pause()
+    speech.pause( immediate )
+#---------------------------------
+
+#---------------------------------
+# speech.stop()
+#---------------------------------
+- id: speech.stop
+  category: function
+  description: >
+    This function can be used to stop anything currently being spoken.
+    Speech will stop after the next word by default. Pass a value of `true` to this
+    function to stop speech immediately.
+
+
+    Unlike `speech.pause` speech which has been stopped cannot be resumed with the
+    `speech.continue()` function.
+
+  examples:
+  - example: |
+      -- Just speak some words immediately
+      speech.say("Hello world!")
+
+      -- Stop it immediately
+      speech.stop( true )
+
+  group: Speech
+  name: speech.stop()
+  parameters:
+  - description: boolean, whether to stop immediately or after the next word
+    name: immediate
+  related: [speech.continue, speech.pause, speech.say]
+  syntax: |
+    speech.stop()
+    speech.stop( immediate )
+#---------------------------------
+
+#---------------------------------
+# speech.continue()
+#---------------------------------
+- id: speech.continue
+  category: function
+  description: >
+    Use this function to resume speech which has been paused with
+    `speech.pause`
+
+  group: Speech
+  name: speech.continue()
+  related: [speech.pause, speech.say]
+  syntax: |
+    speech.continue()
+#---------------------------------
+
+#---------------------------------
+# speech.speaking
+#---------------------------------
+- id: speech.speaking
+  category: const
+  description: >
+    Check this value to see if the speech synthesizer is currently
+    speaking.
+
+  group: Speech
+  name: speech.speaking
+  related: [speech.say]
+  returns: Boolean value indicating whether the system is currently speaking
+  syntax: |
+    speech.speaking
+#---------------------------------
+
+#---------------------------------
+# speech.paused
+#---------------------------------
+- id: speech.paused
+  category: const
+  description: >
+    Check this value to see if the speech synthesizer is currently
+    paused.
+
+  group: Speech
+  name: speech.paused
+  related: [speech.say]
+  returns: Boolean value indicating whether the system is currently paused
+  syntax: |
+    speech.paused
+#---------------------------------
+
+#---------------------------------
+# speech.pitch
+#---------------------------------
+- id: speech.pitch
+  category: const
+  description: >
+    Set this value to control the pitch of speech playback with `speech.say`.
+    This value ranges from 0.5 to 2.0, the default is 1.0.
+
+  group: Speech
+  name: speech.pitch
+  related: [speech]
+  returns: float value, the current global speech pitch
+  syntax: |
+    speech.pitch = 2.0
+#---------------------------------
+
+#---------------------------------
+# speech.rate
+#---------------------------------
+- id: speech.rate
+  category: const
+  description: >
+    Set this value to control the rate (speed) of speech playback with `speech.say`.
+    This value ranges from 0.0 to 1.0, the default is 0.5.
+
+  group: Speech
+  name: speech.rate
+  related: [speech]
+  returns: float value, the current global speech rate
+  syntax: |
+    speech.rate = 0.1
+#---------------------------------
+
+#---------------------------------
+# speech.preDelay
+#---------------------------------
+- id: speech.preDelay
+  category: const
+  description: >
+    Set this value to control the pre delay of speech played back with `speech.say`.
+    Speech will be delayed by this amount prior to playback. Defaults to 0.0.
+
+  group: Speech
+  name: speech.preDelay
+  related: [speech]
+  returns: float value, the delay in seconds prior to playing speech
+  syntax: |
+    speech.preDelay = 0.0
+#---------------------------------
+
+#---------------------------------
+# speech.postDelay
+#---------------------------------
+- id: speech.postDelay
+  category: const
+  description: >
+    Set this value to control the post delay of speech played back with `speech.say`.
+    A pause for this amount of time will occur after speech played back and before
+    the next queued speech.
+
+  group: Speech
+  name: speech.postDelay
+  related: [speech]
+  returns: float value, the delay in seconds after playing speech
+  syntax: |
+    speech.postDelay = 0.0
+#---------------------------------
+
+#---------------------------------
+# speech.volume
+#---------------------------------
+- id: speech.volume
+  category: const
+  description: >
+    Set this value to control volume of speech played back with `speech.say`. This
+    value can range between 0.0 and 1.0. It defaults to 1.0.
+
+  group: Speech
+  name: speech.volume
+  related: [speech]
+  returns: float value, the volume of speech
+  syntax: |
+    speech.volume = 1.0
+#---------------------------------
+
+#---------------------------------
+# mic.start()
+#---------------------------------
+- id: mic.start
+  category: function
+  description: >
+    Use this function to start tracking input from the device microphone
+
+  group: Microphone
+  name: mic.start()
+  related: [mic.stop]
+  syntax: |
+    mic.start()
+#---------------------------------
+
+#---------------------------------
+# mic.stop()
+#---------------------------------
+- id: mic.stop
+  category: function
+  description: >
+    Use this function to stop tracking input from the device microphone
+
+  group: Microphone
+  name: mic.stop()
+  related: [mic.start]
+  syntax: |
+    mic.stop()
+#---------------------------------
+
+#---------------------------------
+# mic.amplitude
+#---------------------------------
+- id: mic.amplitude
+  category: const
+  description: >
+    Sample this value to determine the volume of sound coming into the microphone
+
+  group: Microphone
+  name: mic.amplitude
+  related: [mic.frequency]
+  syntax: |
+    local amp = mic.amplitude
+#---------------------------------
+
+#---------------------------------
+# mic.frequency
+#---------------------------------
+- id: mic.frequency
+  category: const
+  description: >
+    Sample this value to determine the pitch of sound coming into the microphone
+
+  group: Microphone
+  name: mic.frequency
+  related: [mic.amplitude]
+  syntax: |
+    local freq = mic.frequency
+#---------------------------------

@@ -1,0 +1,1023 @@
+id: physics
+name: Physics
+subtitle: Dynamic Motion with Forces, Joints and Collisions
+ordering:
+    - Creating Bodies
+    - Handling Contacts Between Bodies
+    - Attaching Bodies with Joints
+    - Physics Simulation Functions
+functions:
+#---------------------------------
+# physics.body
+#---------------------------------
+- category: type
+  description: This type represents a dynamic rigid body.
+  examples:
+  - example: |
+      -- create a circle with 25px radius
+      circle = physics.body(CIRCLE, 25)
+  group: Creating Bodies
+  id: physics.body
+  name: physics.body
+  parameters:
+  - description: int, the type of the body, can be STATIC, DYNAMIC or KINEMATIC
+    name: type
+    
+  - description: readonly, the shape type of the body, can be CIRCLE, POLYGON, CHAIN
+      or EDGE
+    name: shapeType
+    
+  - description: float, the radius of the body, only valid for circle shape types
+    name: radius
+    
+  - description: table, a table containing the points that make up the body, only
+      valid for polygon shape types
+    name: points
+    
+  - description: float, the x position of the body in pixels
+    name: x
+    
+  - description: float, the y position of the body in pixels
+    name: y
+    
+  - description: vec2, the position of the body
+    name: position
+    
+  - description: float, the angle of the body in degrees
+    name: angle
+    
+  - description: vec2, the center of mass of the body in world space
+    name: worldCenter
+
+  - description: vec2, the center of mass of the body in local space
+    name: localCenter
+    
+  - description: vec2, the current linear velocity of the body in pixels per second
+    name: linearVelocity
+    
+  - description: float, the angular velocity of the body in degrees per second
+    name: angularVelocity
+    
+  - description: float, the density of the body in kg/m^2, 1 by default, cannot
+      be negative
+    name: density
+    
+  - description: float, the mass of the body in kg, cannot be negative. If you set
+      this, density will be ignored
+    name: mass
+    
+  - description: float, the moment of inertia of the body. Cannot be set
+    name: inertia
+    
+  - description: float, the restitution, or 'bouncyness' of the body
+    name: restitution
+    
+  - description: float, the friction of the body determines how easy the object
+      slides. This defaults to 0.2.
+    name: friction
+    
+  - description: > 
+      table, an array of the categories (1 to 16) to which the body belongs to for collision filtering. The default is {1}.
+    name: categories
+    
+  - description: > 
+      table, an array of the categories of bodies with which the body will collide. The default is all categories, {1, 2, ..., 15, 16}.
+    name: mask
+
+  - description: boolean, locks the rotation of this body
+    name: fixedRotation
+    
+  - description: boolean, set to false to remove from simulation
+    name: active
+    
+  - description: boolean, whether the body is a sensor. Collision information is
+      generated for sensors, but they do not physically affect the scene.
+    name: sensor
+    
+  - description: boolean, true if body is currently awake, false otherwise
+    name: awake
+    
+  - description: >
+      boolean, set to false to prevent bodies from sleeping (default: true)
+    name: sleepingAllowed
+    
+  - description: boolean, set to true for fast moving bodies to prevent tunneling
+    name: bullet
+    
+  - description: float, controls the influence of gravity on this body, 1 by default
+    name: gravityScale
+    
+  - description: float, the amount of linear damping applied to this body. Damping
+      reduces the world velocity of bodies, and is different from friction in that
+      it occurs regardless of contact.
+    name: linearDamping
+    
+  - description: float, the amount of angular damping applied to this body.
+    name: angularDamping
+    
+  - description: boolean, controls render interpolation, used to smooth out motion
+      but introduces slight lag
+    name: interpolate
+    
+  - description: table, returns the list of joints connected to this body
+    name: joints
+
+  - description: value, used for storing arbitrary data in this body
+    name: info
+    
+  related:
+  - physics.joint
+  
+  syntax: |
+    myBody = physics.body( CIRCLE, radius )
+    
+    myBody = physics.body( POLYGON,
+                           vec2(-10,10),
+                           vec2(-10,-10),
+                           vec2(10,-10),
+                           vec2(10,10) )
+                                                                      
+    myBody = physics.body( CHAIN, loop,
+                           vec2(0,0),
+                           vec2(10,5),
+                           vec2(15,10) )
+                           
+    myBody = physics.body( EDGE, vec2(0,0),
+                                 vec2(10,10) )
+#---------------------------------
+                                   
+#---------------------------------
+# CIRCLE
+#---------------------------------                                    
+- category: const
+  description: This constant specifies the circle shape type.Circle shapes
+    are the fastest and simplest of the shape types, defined with a single parameter,
+    **radius**.
+  group: Creating Bodies
+  id: CIRCLE
+  name: CIRCLE
+  related:
+  - physics.body
+  returns: int
+  syntax: CIRCLE
+#---------------------------------
+                                   
+#---------------------------------
+# POLYGON
+#---------------------------------                                        
+- category: const
+  description: This constant specifies the polygon shape type.Polygon
+    shapes are defined by a series of vertices. Non convex polygons are automatically
+    decomposed into a set of convex polygons.
+  group: Creating Bodies
+  id: POLYGON
+  name: POLYGON
+  related:
+  - physics.body
+  returns: int
+  syntax: POLYGON
+#---------------------------------
+                                   
+#---------------------------------
+# CHAIN
+#---------------------------------                                        
+- category: const
+  description: This constant specifies the chain shape type.Chain shapes
+    are defined by a series of vertices that form an equivalent set of connected
+    edges. This shape type has no mass and cannot be used in dynamic bodies.
+  group: Creating Bodies
+  id: CHAIN
+  name: CHAIN
+  related:
+  - physics.body
+  returns: int
+  syntax: CHAIN
+#---------------------------------
+                                   
+#---------------------------------
+# EDGE
+#---------------------------------                                        
+- category: const
+  description: This constant specifies the edge shape type.Edge shapes
+    are defined by two vertices, which form a straight line. This shape type has
+    no mass and cannot be used in dynamic bodies.
+  group: Creating Bodies
+  id: EDGE
+  name: EDGE
+  related:
+  - physics.body
+  returns: int
+  syntax: EDGE
+#---------------------------------
+                                   
+#---------------------------------
+# DYNAMIC
+#---------------------------------                                        
+- category: const
+  description: This constant specifies the dynamic body type.Dynamic bodies
+    move under the influence of collisions, forces, joints and gravity.
+  group: Creating Bodies
+  id: DYNAMIC
+  name: DYNAMIC
+  related:
+  - physics.body
+  returns: int
+  syntax: DYNAMIC
+#---------------------------------
+                                   
+#---------------------------------
+# STATIC
+#---------------------------------                                        
+- category: const
+  description: This constant specifies the static body type.Static bodies
+    are unaffected by forces and collisions. They also do not collide with other
+    static or kinematic bodies.Also note that you cannot attach two static/kinematic
+    bodies together with a joint.
+  group: Creating Bodies
+  id: STATIC
+  name: STATIC
+  related:
+  - physics.body
+  returns: int
+  syntax: STATIC
+#---------------------------------
+                                   
+#---------------------------------
+# KINEMATIC
+#---------------------------------                                        
+- category: const
+  description: This constant specifies the kinematic body type.Kinematic
+    bodies are unaffected by forces and collisions. Unlike static bodies, kinematic
+    bodies are meant to be moved, usually by setting linear velocity directly. They
+    also do not collide with other static or kinematic bodies.Also note that
+    you cannot attach two static/kinematic bodies together with a joint.
+  group: Creating Bodies
+  id: KINEMATIC
+  name: KINEMATIC
+  related:
+  - physics.body
+  returns: int
+  syntax: KINEMATIC
+#---------------------------------
+                                   
+#---------------------------------
+# physics.joint
+#---------------------------------                                        
+- category: type
+  description: This type represents a joint that constrains two rigid bodies together.
+  group: Attaching Bodies with Joints
+  id: physics.joint
+  name: physics.joint
+  parameters:
+  - description: int, the type of the joint, can be REVOLUTE, DISTANCE, PRISMATIC, WELD or ROPE
+    name: type
+    
+  - description: body, the first body attached to this joint
+    name: bodyA
+    
+  - description: body, the second body attached to this joint
+    name: bodyB
+    
+  - description: vec2, the anchor for the first body in world coordinates
+    name: anchorA
+    
+  - description: vec2, the anchor for the second body in world coordinates
+    name: anchorB
+    
+  - description: vec2, the current amount of force used by the joint to constrain
+      the relative motion between the two bodies. This can be used to break joints
+      when the force reaches a given threshold
+    name: reactionForce
+    
+  - description: float, the current amount of torque used by the joint to constrain
+      the relative rotation between the two bodies. This can be used to break joints
+      when the torque reaches a given threshold
+    name: reactionTorque
+    
+  - description: boolean, whether or not the limit for this joint is enabled. Only
+      certain joints, such as REVOLUTE and PRISMATIC have limits
+    name: enableLimit
+    
+  - description: float, the lower limit of this joint. For REVOLUTE joints this
+      represents the angular limit between bodies in degrees. For PRISMATIC joints
+      this represents the translation limit
+    name: lowerLimit
+    
+  - description: float, the upper limit of this joint. For REVOLUTE joints this
+      represents the angular limit between bodies in degrees. For PRISMATIC joints
+      this represents the translation limit
+    name: upperLimit
+    
+  - description: boolean, whether or not the motor for this joint is enabled. Only
+      certain joints, such as REVOLUTE and PRISMATIC have motors
+    name: enableMotor
+    
+  - description: float, the desired speed of the motor. For REVOLUTE joints this
+      is in degrees per second. For PRISMATIC joints this is specified in pixels
+      per second
+    name: motorSpeed
+    
+  - description: float, the maximum amount of torque the motor can apply to reach
+      the desired motor speed. Only REVOLUTE joints have this property
+    name: maxMotorTorque
+    
+  - description: float, the maximum amount of force the motor can apply to reach
+      the desired motor speed. Only PRISMATIC joints have this property
+    name: maxMotorForce
+    
+  - description: float, the length of the joint. Only applies to DISTANCE joints
+    name: length
+    
+  - description: float, The softness of the joint, set to zero for stiff joints.
+      Only applies to DISTANCE and WELD joints
+    name: frequency
+    
+  - description: float, Controls the damping of soft joints, higher values reduce
+      oscillation, set to zero for stiff joints. Only applies to DISTANCE and WELD
+      joints
+    name: dampingRatio
+
+  - description: float, Controls the maximum length (distance between anchor points) of the joint. Only applies to ROPE
+      joints
+    name: maxLength
+
+  related:
+  - physics.body
+  syntax: |
+    physics.joint( REVOLUTE, bodyA, bodyB, 
+                             anchor )
+
+    physics.joint( PRISMATIC, bodyA, bodyB,
+                              anchorA, 
+                              direction )
+
+    physics.joint( DISTANCE, bodyA, bodyB,
+                             anchorA, 
+                             anchorB )
+
+    physics.joint( WELD, bodyA, bodyB, 
+                                anchor )
+                                
+    physics.joint( ROPE, bodyA, bodyB,
+                             anchorA, 
+                             anchorB,
+                             maxLength )
+                                
+#---------------------------------
+                                   
+#---------------------------------
+# REVOLUTE
+#---------------------------------                                          
+- category: const
+  description: This constant specifies the revolute joint type. Revolute
+    joints constrain two bodies so that they rotate about a single anchor point.
+  group: Attaching Bodies with Joints
+  id: REVOLUTE
+  name: REVOLUTE
+  related:
+  - physics.joint
+  returns: int
+  syntax: REVOLUTE
+#---------------------------------
+                                   
+#---------------------------------
+# DISTANCE
+#---------------------------------                                        
+- category: const
+  description: This constant specifies the distance joint type. Distance
+    joints constrain two bodies so that they maintain a fixed distance between their
+    respective anchor points. The length of a distance joint is taken from the initial
+    distance between the two anchor points in world space. Setting the frequency
+    and damping ratio of the joint allows for soft spring-like behaviour.
+  group: Attaching Bodies with Joints
+  id: DISTANCE
+  name: DISTANCE
+  related:
+  - physics.joint
+  returns: int
+  syntax: DISTANCE
+#---------------------------------
+                                   
+#---------------------------------
+# PRISMATIC
+#---------------------------------                                        
+- category: const
+  description: This constant specifies the prismatic joint type. Prismatic
+    joints constrain the motion of two bodies along the axis between the two specified
+    anchor points. This allows for telescopic motion, while restricting relative
+    rotation between the two bodies.
+  group: Attaching Bodies with Joints
+  id: PRISMATIC
+  name: PRISMATIC
+  related:
+  - physics.joint
+  returns: int
+  syntax: PRISMATIC
+#---------------------------------
+                                   
+#---------------------------------
+# WELD
+#---------------------------------                                        
+- category: const
+  description: This constant specifies the weld joint type. Weld joints
+    constrain the motion and relative rotation between two bodies, effectively turning
+    them into a single body. Due to the iterative nature of the solver, weld joints
+    can bend when put under stress and may fail completely when large forces are
+    involved or several weld joints are chained together to form a larger object.
+  group: Attaching Bodies with Joints
+  id: WELD
+  name: WELD
+  related:
+  - physics.joint
+  returns: int
+  syntax: WELD
+#---------------------------------
+
+#---------------------------------
+# ROPE
+#---------------------------------                                        
+- category: const
+  description: This constant specifies the rope joint type. Rope joints 
+    constrain the maximum distance between two bodies.
+  group: Attaching Bodies with Joints
+  id: ROPE
+  name: ROPE
+  related:
+  - physics.joint
+  returns: int
+  syntax: ROPE
+#---------------------------------
+
+
+#---------------------------------
+# Contacts Overview
+#---------------------------------                                        
+- category: overview
+  description: >
+    A contact occurs whenever two bodies collide with each other. Codea allows you to handle contacts by implementing a global function called **collide( contact )** in your code.
+
+        -- This gets called whenever two bodies collide
+        function collide( contact )
+            if contact.state == BEGAN then
+                print("HIT!")
+            end
+        end
+        
+    Contact objects contain information about the collision, such as the state, position of the collision, which bodies were involved, and so on. For a full listing of data available in a contact, see the **physics.contact** documentation.
+  group: Handling Contacts Between Bodies
+  id: contactsOverview
+  name: Contacts Overview
+  related:
+  - physics.contact
+#---------------------------------
+                                   
+#---------------------------------
+# physics.contact
+#---------------------------------                                        
+- category: type
+  description: >
+    This type represents a collision between two bodies. 
+    
+    
+    A **physics.contact** object is supplied to the global function **collide(
+    contact )** whenever a two bodies collide, maintain contact over multiple
+    frames, or separate from each other. The contact supplied by this event will
+    remain static as it is only a copy of the underlying physical state.
+  examples:
+  - example: |
+      function collide(contact)
+          if contact.state == BEGAN then 
+              print("HIT!")
+          end
+      end
+  group: Handling Contacts Between Bodies
+  id: physics.contact
+  name: physics.contact
+  parameters:
+  - description: number, a unique id that represents this contact
+    name: id
+    
+  - description: int, the current state of this contact, can be BEGAN, CHANGED, ENDED
+    name: state
+    
+  - description: bool, whether or not the contact is currently touching. Due to
+      the way contacts are cached this can be false under some circumstances.
+    name: touching
+    
+  - description: vec2, the current position of this contact
+    name: position
+    
+  - description: vec2, the current normal of this contact
+    name: normal
+    
+  - description: float, the magnitude of energy used to separate the two colliding
+      bodies projected along the normal vector. Useful for measuring the strength
+      of an impact
+    name: normalImpulse
+    
+  - description: float, the magnitude of energy used to separate the two colliding
+      bodies projected along the tangent vector (perpendicular to the normal). Useful
+      for measuring the friction of an impact
+    name: tangentImpulse
+    
+  - description: int, the number of points in the contact manifold
+    name: pointCount
+    
+  - description: table, an array of vec2's describing the contact manifold
+    name: points
+    
+  - description: body, the first body in the collision represented by this contact
+    name: bodyA
+    
+  - description: body, the second body in the collision represented by this contact
+    name: bodyB
+    
+  related:
+  - physics.body
+  - physics.joint
+#---------------------------------
+                                   
+#---------------------------------
+# body.applyForce
+#---------------------------------     
+- category: method
+  description: Applies a force to this body object. If `worldPoint` is not specified then the force will be applied to the center of the body.
+  group: Creating Bodies
+  id: body.applyForce
+  name: body.applyForce( force )
+  parameters:
+  - description: vec2, the amount of force to apply as a vector
+    name: force
+  - description: vec2, the point to apply the force from, in world coordinates
+    name: worldPoint
+  related:
+  - physics.body
+  - body.applyTorque
+  syntax: |
+    myBody:applyForce( force )
+    myBody:applyForce( force, worldPoint )
+#---------------------------------
+                                   
+#---------------------------------
+# body.applyTorque
+#---------------------------------       
+- category: method
+  description: Applies torque to this body object.
+  group: Creating Bodies
+  id: body.applyTorque
+  name: body.applyTorque( torque )
+  parameters:
+  - description: float, the amount of torque
+    name: torque
+  related:
+  - physics.body
+  - body.applyForce
+  syntax: myBody:applyTorque( applyTorque )
+#---------------------------------
+
+#---------------------------------
+# body.applyLinearImpulse
+#---------------------------------
+- category: method
+  description: Applies a linear impulse to this body object. If `worldPoint` is not specified then the impulse will apply to the center of the body.
+  group: Creating Bodies
+  id: body.applyLinearImpulse
+  name: body.applyLinearImpulse( impulse )
+  parameters:
+  - description: vec2, the impulse to apply as a vector
+    name: impulse
+  - description: vec2, the point to apply the impulse from, in world coordinates
+    name: worldPoint
+  related:
+  - physics.body
+  - body.applyAngularImpulse
+  syntax: |
+    myBody:applyLinearImpulse( impulse )
+    myBody:applyLinearImpulse( impulse, worldPoint )
+#---------------------------------
+
+#---------------------------------
+# body.applyAngularImpulse
+#---------------------------------
+- category: method
+  description: Applies an angular impulse to this body object.
+  group: Creating Bodies
+  id: body.applyAngularImpulse
+  name: body.applyAngularImpulse( impulse )
+  parameters:
+  - description: float, the angular impulse
+    name: impulse
+  related:
+  - physics.body
+  - body.applyLinearImpulse
+  syntax: myBody:applyAngularImpulse( impulse )
+#---------------------------------
+
+#---------------------------------
+# body.destroy
+#---------------------------------     
+- category: method
+  description: A body will be removed from the simulation automatically when
+    garbage collected, however this may not happen immediately. To ensure that a
+    body is removed from the simulation, use destroy(). Please note that all methods
+    and properties will cease to work after destroy() is called.
+  examples:
+  - example: |
+      -- destroy should be used before
+      -- setting a body to nil
+      circle = physics.body(CIRCLE, 100)
+      circle:destroy()
+      circle = nil
+  group: Creating Bodies
+  id: body.destroy
+  name: body.destroy()
+  related:
+  - physics.body
+  - body.applyForce
+  - body.destroy
+  syntax: myBody:destroy()
+#---------------------------------
+                                   
+#---------------------------------
+# body.testPoint
+#---------------------------------     
+- category: method
+  description: Tests if worldPoint is inside this **body**.
+  examples:
+  - example: |
+      -- test if CurrentTouch is inside this body
+      circle = physics.body(CIRCLE, 100)
+      point = vec2(CurrentTouch.x, CurrentTouch.y)
+      
+      if circle:testPoint(point) then 
+          print("HIT!") 
+      end
+  group: Creating Bodies
+  id: body.testPoint
+  name: body.testPoint( worldPoint )
+  parameters:
+  - description: vec2, the point to test for intersection, in world space
+    name: worldPoint
+  related:
+  - physics.body
+  - body.applyForce
+  - body.destroy
+  - body.testPoint
+  returns: true if worldPoint is inside this **body**, false otherwise
+  syntax: myBody:testPoint( worldPoint )
+#---------------------------------
+                                   
+#---------------------------------
+# body.testOverlap
+#---------------------------------     
+- category: method
+  description: Tests if this **body** intersects with **otherBody**.This
+    is useful if you want to do simple shape intersection tests that do not require
+    realtime contact information.
+  examples:
+  - example: |
+      -- test if two bodies overlap
+      circle1 = physics.body(CIRCLE, 100)
+      circle2 = physics.body(CIRCLE, 10)
+      
+      if circle1:testOverlap(circle2) then 
+          print("HIT!")
+      end
+  group: Creating Bodies
+  id: body.testOverlap
+  name: body.testOverlap( otherBody )
+  parameters:
+  - description: body, the body to test for intersection with
+    name: otherBody
+  related:
+  - physics.body
+  - body.applyForce
+  - body.destroy
+  - body.testPoint
+  returns: true if this **body** is intersecting with **otherBody**, false
+    otherwise
+  syntax: myBody:testOverlap( otherBody )
+#---------------------------------
+                                   
+#---------------------------------
+# body.getLocalPoint
+#---------------------------------     
+- category: method
+  description: Converts a point to the local coordinate space of this **body**
+  group: Creating Bodies
+  id: body.getLocalPoint
+  name: body.getLocalPoint( worldPoint )
+  related:
+  - physics.body
+  - body.applyForce
+  - body.destroy
+  - body.testPoint
+  returns: vec2, coordinate in local space of this **body**
+  syntax: myBody:getLocalPoint( worldPoint )
+  
+#---------------------------------
+                                   
+#---------------------------------
+# body.getWorldPoint
+#---------------------------------         
+- category: method
+  description: Converts a point from the local coordinate space of this **body**
+    to world space
+  group: Creating Bodies
+  id: body.getWorldPoint
+  name: body.getWorldPoint( localPoint )
+  related:
+  - physics.body
+  - body.applyForce
+  - body.destroy
+  - body.testPoint
+  returns: vec2, coordinate in world space
+  syntax: myBody:getWorldPoint( localPoint )
+#---------------------------------
+                                   
+#---------------------------------
+# body.getLinearVelocityFromWorldPoint
+#---------------------------------         
+- category: method
+  description: Samples the linear velocity of this **body** at a given point
+    in world space.
+  group: Creating Bodies
+  id: body.getLinearVelocityFromWorldPoint
+  name: body.getLinearVelocityFromWorldPoint( point )
+  related:
+  - physics.body
+  - body.applyForce
+  - body.destroy
+  - body.testPoint
+  returns: vec2, linear velocity at worldPoint of this **body**
+  syntax: myBody:getLinearVelocityFromWorldPoint( worldPoint )
+#---------------------------------
+                                   
+#---------------------------------
+# body.getLinearVelocityFromLocalPoint
+#---------------------------------         
+- category: method
+  description: Samples the linear velocity of this **body** at a given point
+    in local space.
+  group: Creating Bodies
+  id: body.getLinearVelocityFromLocalPoint
+  name: body.getLinearVelocityFromLocalPoint( point )
+  related:
+  - physics.body
+  - body.applyForce
+  - body.destroy
+  - body.testPoint
+  returns: vec2, linear velocity at localPoint of this **body**
+  syntax: myBody:getLinearVelocityFromLocalPoint( worldPoint )
+#---------------------------------
+                                   
+#---------------------------------
+# physics.pause
+#---------------------------------             
+- category: function
+  description: Pauses the physics simulation.
+  group: Physics Simulation Functions
+  id: physics.pause
+  name: physics.pause()
+  parameters: []
+  related:
+  - physics.resume
+  syntax: |
+    -- pause physics
+    physics.pause()
+#---------------------------------
+                                   
+#---------------------------------
+# physics.resume
+#---------------------------------               
+- category: function
+  description: Resumes the physics simulation.
+  group: Physics Simulation Functions
+  id: physics.resume
+  name: physics.resume()
+  parameters: []
+  related:
+  - physics.pause
+  syntax: |
+    -- resume physics
+    physics.resume()
+#---------------------------------
+                                   
+#---------------------------------
+# physics.raycast
+#---------------------------------               
+- category: function
+
+  description: Performs a raycast from the **start** point to the **end**
+    point.Any additional parameters are treated as category filters, allowing
+    certain bodies to be ignored. This function only returns hit information on
+    the closest rigid body detected.
+    
+  group: Physics Simulation Functions
+  id: physics.raycast
+  name: physics.raycast( start, end, ... )
+  
+  parameters:
+  - description: vec2, the start point of the ray (technically a line segment, but
+      finite for practical purposes)
+    name: start
+  - description: vec2, the end point of the ray
+    name: end
+    
+  related:
+  - physics.raycastAll
+  - physics.queryAABB
+  
+  returns: |
+    table, if the raycast intersects a body this function will return a table containing the following key-value pairs:
+    
+        body => detected 
+        point => point of intersection
+        normal => normal on surface of hit body
+        fraction => fraction of total ray length from start to intersecton point
+        
+  syntax: |
+    physics.raycast(start, end)
+    physics.raycast(start, end, category1)
+    physics.raycast(start, end, category1, 
+                                category2)
+#---------------------------------
+                                   
+#---------------------------------
+# physics.raycastAll
+#---------------------------------               
+- category: function
+
+  description: Performs a raycast from the **start** point to the **end**
+    point.Any additional parameters are treated as category filters, allowing
+    certain bodies to be ignored. This function returns an array of tables describing
+    all objects hit along the ray, ordered from closest to farthest.
+    
+  group: Physics Simulation Functions
+  id: physics.raycastAll
+  name: physics.raycastAll( start, end, ... )
+  
+  parameters:
+  - description: vec2, the start point of the ray (technically a line segment, but
+      finite for practical purposes)
+    name: start
+    
+  - description: vec2, the end point of the ray
+    name: end
+    
+  related:
+  - physics.raycast
+  - physics.queryAABB
+  
+  returns: |
+    array, if the raycast intersects one or more bodies this function will an array of tables containing the following key-value pairs
+    
+        body => detected body
+        point => point of intersection
+        normal => normal on surface of hit body
+        fraction => fraction of total ray length from start to intersecton point
+        
+  syntax: |
+    physics.raycastAll(start, end)
+    physics.raycastAll(start, end, category1)
+    physics.raycastAll(start, end, category1, 
+                                   category2)
+#---------------------------------
+                                   
+#---------------------------------
+# physics.queryAABB
+#---------------------------------               
+- category: function
+
+  description: Performs a query to find all bodies within the supplied axis-aligned
+    bounding box.Any additional parameters are treated as category filters,
+    allowing certain bodies to be ignored.
+  group: Physics Simulation Functions
+  
+  id: physics.queryAABB
+  name: physics.queryAABB( lowerLeft, upperRight, ... )
+  
+  parameters:
+  - description: vec2, the position of the lower left corner of the query axis-aligned
+      bounding box
+    name: lowerLeft
+  - description: vec2, the position of the upper right corner of the query axis-aligned
+      bounding box
+    name: upperRight
+    
+  related:
+  - physics.raycast
+  - physics.raycastAll
+  - physics.queryAABB
+  
+  returns: array, returns all bodies that lie within the supplied bounding box
+  
+  syntax: |
+    physics.queryAABB(lowerLeft, upperRight)
+    
+    physics.queryAABB(lowerLeft, upperRight, 
+                      category1)
+    
+    physics.queryAABB(lowerLeft, upperRight,
+                      category1, category2)
+#---------------------------------
+                                   
+#---------------------------------
+# physics.gravity
+#---------------------------------             
+- category: function
+  description: Sets the gravity of the world, units are in pixels per second^2.
+    Use the Gravity global to set to device gravity. When no parameters are passed,
+    function returns current world gravity as a vec2.
+  group: Physics Simulation Functions
+  id: physics.gravity
+  name: physics.gravity( x, y )
+  parameters:
+  - description: float, gravity in the x-axis
+    name: x
+  - description: float, gravity in the y-axis
+    name: y
+  - description: vec2, gravity in both axes
+    name: grav
+  - description: vec3, device gravity used as a special case
+    name: Gravity
+  related:
+  - physics.iterations
+  - physics.pixelToMeterRatio
+  returns: vec2, the current world gravity if no parameters are supplied
+  syntax: |
+    physics.gravity()
+    physics.gravity( x, y )
+    physics.gravity( grav )
+    physics.gravity( Gravity )
+#---------------------------------
+                                   
+#---------------------------------
+# physics.iterations
+#---------------------------------               
+- category: function
+  description: Sets the iterations used by the physics solver. Larger iterations
+    tend to result in more stable physics, but will slow down the simulation.
+  group: Physics Simulation Functions
+  id: physics.iterations
+  name: physics.iterations( velIterations, posIterations )
+  parameters:
+  - description: >
+      int, the number of velocity iterations performed each time step (default: 10)
+    name: velocityIterations
+  - description: >
+      int, the number of position iterations performed each time step (default: 8)
+    name: positionIterations
+  related:
+  - physics.gravity
+  - physics.pixelToMeterRatio
+  syntax: |
+    physics.iterations( velocityIterations,
+                        positionIterations )
+#---------------------------------
+                                   
+#---------------------------------
+# physics.pixelToMeterRatio
+#---------------------------------                                   
+- category: const
+  description: Sets the ratio between pixels and meters in the simulation.This
+    is used to make objects on the screen appear at a reasonable scale, while allowing
+    the physics engine to remain stable. The default value is 32, meaning that for
+    every 32 pixels in screen space there is 1 meter in physics space. This can
+    be largely ignored in most cases, however if dealing with objects much larger
+    or smaller than the default settings, it can be useful to change the ratio to
+    something closer to that scale.
+  group: Physics Simulation Functions
+  id: physics.pixelToMeterRatio
+  name: physics.pixelToMeterRatio
+  related:
+  - physics.gravity
+  - physics.iterations
+  returns: int, the current ratio
+  syntax: |
+    ratio = physics.pixelToMeterRatio
+    physics.pixelToMeterRatio = ratio
+
+#---------------------------------
+# physics.continuous
+#---------------------------------                                   
+- category: const
+  description: Sets whether the physics engine performs continuous collision detection.
+    Continuous collision detection ensures that very fast moving bodies do not pass
+    through thin objects.
+    
+    
+    You must also set the `bullet` property to `true` on any physics body you wish to
+    use with continuous collision detection.
+    
+    
+    By default, this value is `false` because continuous physics increases the computational
+    cost of running the physics engine.
+  group: Physics Simulation Functions
+  id: physics.continuous
+  name: physics.continous
+  related:
+  - physics.body
+  returns: bool, whether continous collision is set
+  syntax: |
+    physics.continuous = true

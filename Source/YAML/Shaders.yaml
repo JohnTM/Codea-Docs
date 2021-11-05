@@ -1,0 +1,832 @@
+id: shaders
+name: Shaders & Mesh
+subtitle: Advanced Graphics Features
+ordering:
+    - Overview
+    - Meshes
+    - Buffers
+    - Shaders
+    - Geometry Functions
+functions:
+
+#---------------------------------
+# meshOverview
+#---------------------------------      
+- id: meshOverview
+  category: overview
+  description: >
+    Meshes in Codea can be used to efficiently render 2D shapes and 3D models. The `mesh`
+    object type represents a triangle mesh — a collection of vertex triplets that each represent
+    a triangle. Each vertex in a `mesh` contains a position (`vec2` or `vec3`), texture
+    coordinate (`vec2`), and color (`color`).
+    
+    
+    To create a mesh, call the `mesh()` function:
+    
+    
+        myMesh = mesh()
+    
+    
+    A mesh object has the following settable properties:
+    
+    
+        myMesh.texture   -- sprite string or image
+        myMesh.vertices  -- table of vertices (vec2 or vec3)
+        myMesh.texCoords -- table of texture coordinates (vec2)
+        myMesh.colors    -- table of colors (color)
+        myMesh.normals   -- table of normals (vec3)
+        myMesh.shader    -- a shader object
+
+
+    Texture coordinates — the `texCoords` property — define a mapping between a 2D coordinate within a texture 
+    (ranging from 0,0 to 1,1) and a vertex in your mesh. This allows you to specify which portions of an image 
+    cover the triangles in your mesh.
+    
+    
+    Vertex `colors` define the color at a particular vertex in your mesh. These colors are linearly interpolated
+    between vertices. This allows you to smoothly blend between colors at neighbouring vertices.
+    
+    
+    `normals` can be used to define 3D normals for each vertex in your mesh. This is useful for computing shading
+    from light sources. By default, Codea does not use mesh normals in any of its rendering modes. However, you
+    may use the normal buffer in your own custom shaders.
+
+
+    The `mesh` type also contains convenience methods, such as `addRect`, for quickly adding rectangles to a mesh.
+    Please see the related documentation for more details.
+    
+    
+    The `shader` property is discussed in more detail in the shaders section. This property can be used to link a
+    shader with a mesh for advanced rendering.
+  examples:
+  - example: |
+      -- Create a mesh
+      myMesh = mesh()
+      
+      -- Set vertices
+      myMesh.vertices = {vec3(0,0,0),
+                         vec3(100,0,0),
+                         vec3(100,100,0)}
+                         
+      -- Assign texture coordinates
+      myMesh.texCoords = {vec2(0,0),
+                          vec2(1,0),
+                          vec2(1,1)}
+
+      -- Assign a texture
+      myMesh.texture = asset.Planet_Cute.Grass_Block
+
+      -- Set all vertex colors to white
+      myMesh:setColors(255,255,255,255)
+      
+      -- Draw the mesh
+      myMesh:draw()
+  group: Overview
+  name: Mesh Overview
+  related: [mesh, vec3, vec2, color, mesh.draw, shaderOverview]
+#---------------------------------
+
+#---------------------------------
+# shaderOverview
+#---------------------------------      
+- id: shaderOverview
+  category: overview
+  description: >
+    Shaders in Codea are used only in conjunction with `mesh`. They can be used to render special
+    effects, deformations, lighting and other advanced graphical effects when drawing a mesh.
+    
+    
+    Shaders are written in a language called GLSL ES. This is the OpenGL ES Shading Language. Codea includes
+    a special editor called the *Shader Lab* for writing shaders.
+    
+    
+    In order to use shaders within Codea you use the `shader` object type. To create a shader, use the
+    following syntax:
+    
+    
+        myMesh.shader = shader(asset.documents.MyShader)
+        
+        
+    (*Note that you can tap on the highlighted shader parameters in the code editor to select, or even
+    create new shaders directly within the Codea editor.*)
+        
+    
+    This will load the file "MyShader" in your *Documents* and attach it to `myMesh`. Any `uniform` variables
+    declared in your shader can then by accessed as properties on your shader as follows:
+    
+    
+        -- Assume MyShader declares a float 
+        --  uniform called "myCustomUniform"
+        myMesh.shader.myCustomUniform = 3.5
+        
+        
+    Similarly, `attribute` variables declared in your shader can be accessed as buffers on your mesh:
+    
+    
+        -- Assume MyShader declares a vec2
+        --  attribute called "myAttribute"
+        buf = myMesh:buffer("myAttribute")
+        buf:resize(10)
+        buf[1] = vec2(1,1)
+        buf[2] = vec2(0,1)
+        ...
+
+
+    For advanced users, you can also bypass the shader picking system and Shader Lab by setting your GLSL 
+    code directly on your shader object. For example, you may do the following:
+    
+    
+        myShader.vertexProgram = "... vertex program string ..."
+        myShader.fragmentProgram = "... fragment program string ..."
+  examples:
+  - example: |
+      -- Create a mesh
+      myMesh = mesh()
+      
+      -- Assign a shader
+      myMesh.shader = shader(asset.documents.MyShader)
+
+      -- Set vertices
+      myMesh.vertices = {vec3(0,0,0),
+                         vec3(100,0,0),
+                         vec3(100,100,0)}
+                         
+      -- Assign texture coordinates
+      myMesh.texCoords = {vec2(0,0),
+                          vec2(1,0),
+                          vec2(1,1)}
+
+      -- Assign a texture
+      myMesh.texture = asset.builtin.Planet_Cute.Grass_Block
+
+      -- Set all vertex colors to white
+      myMesh:setColors(255,255,255,255)
+      
+      -- Draw the mesh
+      myMesh:draw()
+  group: Overview
+  name: Shader Overview
+  related: [shader, mesh, buffer, mesh.buffer, meshOverview]
+#---------------------------------
+
+#---------------------------------
+# mesh
+#---------------------------------      
+- id: mesh
+  category: type
+  description: This type represents a triangle mesh. Every three vertices draws
+    a triangle. You can set vertices, texture coordinates and colors. You can also
+    specify a texture using a sprite from a sprite pack or an image, or using the 
+    CAMERA constant to use the current live camera capture source.
+  examples:
+  - example: |
+      -- Create a mesh
+      myMesh = mesh()
+      
+      -- Set vertices
+      myMesh.vertices = {vec3(0,0,0),
+                         vec3(100,0,0),
+                         vec3(50,100,0)}
+                         
+      -- Set all vertex colors to white
+      myMesh:setColors(255,255,255,255)
+  group: Meshes
+  name: mesh
+  parameters:
+  - description: table, an array of vec2 or vec3 objects
+    name: vertices
+  - description: table, an array of color objects. If not set the global fill color
+      is used for all vertices
+    name: colors
+  - description: table, an array of vec2 objects. If not set, triangles are drawn
+      with color only
+    name: texCoords
+  - description: string, image or CAMERA, the texture to use when drawing this mesh. If
+      not set, triangles are drawn with color only
+    name: texture
+  - description: table, an array of vec3 objects. Not used by mesh, but may be used by
+      custom shaders.
+    name: normals
+  - description: shader, a shader object
+    name: shader
+  - description: bool, true if this mesh is valid for drawing
+    name: valid
+  - description: int, number of vertices in this mesh
+    name: size
+  related: [color, image, spriteSize, sprite, vec3, vec2, CAMERA, shader, meshOverview, shaderOverview]
+  returns: The newly created empty mesh
+  syntax: m = mesh()
+#---------------------------------
+
+#---------------------------------
+# mesh.draw()
+#---------------------------------     
+- id: mesh.draw
+  category: method
+  description: This method draws the `mesh` object. The `mesh` object
+    must be valid to be drawn. For a `mesh` to be valid it must have an equal
+    number of vertices, colors, and texCoords (that are a multiple of three). With
+    the exception that texCoords and / or colors may be nil
+
+
+    The `count` parameter specifies the number of instances of this mesh
+    to draw. This is an advanced parameter and can be used with instanced
+    mesh buffers and shaders to efficiently draw many copies of the same
+    mesh differentiated via shader attributes and uniforms.
+
+
+    The `count` parameter is only available on devices which support mesh
+    instancing. Older devices may not support this parameter and will ignore
+    it.
+  group: Meshes
+  name: mesh.draw()
+  parameters:
+  - description: integer, number of instances of this mesh to draw
+    name: count
+  related: [mesh]
+  syntax: |
+    myMesh:draw()
+    myMesh:draw(count)
+#---------------------------------
+
+#---------------------------------
+# mesh.setColors()
+#---------------------------------         
+- id: mesh.setColors
+  category: method
+  description: This method sets the colors of all vertices in the `mesh` to
+    the color specified by `c` (or `r`,`g`,`b`,`a`).
+  group: Meshes
+  name: mesh.setColors( c )
+  parameters:
+  - description: color, set all mesh vertices to this color
+    name: c
+  - description: value of the red color component to apply to all vertices
+    name: r
+  - description: value of the green color component to apply to all vertices
+    name: g
+  - description: value of the blue color component to apply to all vertices
+    name: b
+  - description: value of the alpha component to apply to all vertices
+    name: a
+  related: [mesh]
+  syntax: |
+    myMesh:setColors( c )
+    myMesh:setColors( r, g, b )
+    myMesh:setColors( r, g, b, a )
+#---------------------------------
+
+#---------------------------------
+# mesh.clear()
+#---------------------------------             
+- id: mesh.clear
+  category: method
+  description: This method clears a `mesh` removing all vertices, texCoords, colors and normals. 
+    The underlying capacity of the `mesh` remains after clearing and this may be preferable to
+    creating a new `mesh`. This method also clears any custom buffers attached to the mesh through
+    shaders.
+  group: Meshes
+  name: mesh.clear()
+  related: [mesh]
+  syntax: myMesh:clear()
+#---------------------------------
+
+#---------------------------------
+# mesh.addRect()
+#---------------------------------     
+- id: mesh.addRect
+  category: method
+  description: This method appends a rectangle centered at the coordinates (x,y)
+    with width, w and height, h. The optional parameter r specifies rotation in
+    radians
+  group: Meshes
+  name: mesh.addRect( x, y, w, h, r )
+  parameters:
+  - description: float, the x coordinate used to place the rectangle
+    name: x
+  - description: float, the y coordinate used to place the rectangle
+    name: y
+  - description: float, the width of the rectangle
+    name: w
+  - description: float, the height of the rectangle
+    name: h
+  - description: float, the rotation of the rectangle
+    name: r
+  related: [mesh, mesh.setRect]
+  returns: Returns the index of this rectangle, which can be used to set its position
+    later
+  syntax: |
+    myMesh:addRect( x, y, w, h)
+    myMesh:addRect( x, y, w, h, r)
+#---------------------------------
+
+#---------------------------------
+# mesh.setRect()
+#---------------------------------         
+- id: mesh.setRect
+  category: method
+  description: This method sets the geometry an existing rectangle with index i,
+    centered at the coordinates (x,y) with width, w and height, h. The optional
+    parameter r specifies rotation in radians
+  group: Meshes
+  name: mesh.setRect( i, x, y, w, h, r )
+  parameters:
+  - description: int, the index of the rectangle in the `mesh`
+    name: i
+  - description: float, the x coordinate used to place the rectangle
+    name: x
+  - description: float, the y coordinate used to place the rectangle
+    name: y
+  - description: float, the width of the rectangle
+    name: w
+  - description: float, the height of the rectangle
+    name: h
+  - description: float, the rotation of the rectangle
+    name: r
+  related: [mesh, mesh.addRect, mesh.setRectTex, mesh.setRectColor]
+  syntax: |
+    myMesh:setRect( i, x, y, w, h)
+    myMesh:setRect( i, x, y, w, h, r)
+#---------------------------------
+
+#---------------------------------
+# mesh.setRectTex()
+#---------------------------------       
+- id: mesh.setRectTex
+  category: method
+  description: This method sets the texture coordinates of an existing rectangle
+    with index `i`.
+  group: Meshes
+  name: mesh.setRectTex( i, s, t, w, h )
+  parameters:
+  - description: int, the index of the rectangle in the `mesh`
+    name: i
+  - description: float, the left edge of the texture rectangle
+    name: s
+  - description: float, the bottom edge of the texture rectangle
+    name: t
+  - description: float, the width of the texture rectangle
+    name: w
+  - description: float, the height of the texture rectangle
+    name: h
+  related: [mesh, mesh.addRect, mesh.setRect, mesh.setRectColor]
+  syntax: |
+    myMesh:setRectTex( i, s, t, w, h)
+#---------------------------------
+
+#---------------------------------
+# mesh.setRectColor()
+#---------------------------------             
+- id: mesh.setRectColor
+  category: method
+  description: This method sets the color of an existing rectangle with index `i`.
+  group: Meshes
+  name: mesh.setRectColor( i, r, g, b )
+  parameters:
+  - description: int, the index of the rectangle in the `mesh`
+    name: i
+  - description: color, the color to set the rectangle to
+    name: c
+  - description: int, the red component of the color to use
+    name: r
+  - description: int, the green component of the color to use
+    name: g
+  - description: int, the blue component of the color to use
+    name: b
+  - description: int, the alpha component of the color to use
+    name: a
+  related: [mesh, mesh.addRect, mesh.setRect, mesh.setRectTex]
+  syntax: |
+    myMesh:setRectColor( i, c)
+    myMesh:setRectColor( i, r, g, b)
+    myMesh:setRectColor( i, r, g, b, a)
+#---------------------------------
+
+#---------------------------------
+# mesh.vertex()
+#---------------------------------       
+- id: mesh.vertex
+  category: method
+  description: >
+    When called with one argument, `i`, this method returns the
+    vertex at the index specified by `i`. When called with more arguments,
+    this method sets the vertex at index `i` to the value provided by `x`,
+    `y`, `z` or a `vec3` or `vec2`.
+  
+
+    This method is useful when
+    you wish to set a single vertex, or small subset of vertices. It is much more
+    efficient than assigning a new vertex table to the mesh.vertices property.
+  group: Meshes
+  name: mesh.vertex( i )
+  parameters:
+  - description: int, the index of the vertex in the `mesh`
+    name: i
+  - description: float, the x position to set vertex i to
+    name: x
+  - description: float, the y position to set vertex i to
+    name: y
+  - description: float, the z position to set vertex i to
+    name: z
+  - description: vec3, the 3D position to set vertex i to
+    name: vec3
+  - description: vec2, the 2D position to set vertex i to
+    name: vec2
+  related: [mesh, mesh.texCoord, mesh.color]
+  returns: If called with one argument (the index of the vertex) then this returns
+    a `vec3` value representing the position of the vertex.
+  syntax: |
+    v = myMesh:vertex( i )
+    myMesh:vertex( i, x, y, z )
+    myMesh:vertex( i, vec3 )
+    myMesh:vertex( i, x, y )
+    myMesh:vertex( i, vec2 )
+#---------------------------------
+
+#---------------------------------
+# mesh.texCoord()
+#---------------------------------      
+- id: mesh.texCoord
+  category: method
+  description: >
+    When called with one argument, `i`, this method returns the
+    texture coordinate at the index specified by `i`. When called with more
+    arguments, this method sets the texture coordinate at index `i` to the
+    value provided by `x`, `y` or the given `vec2` value.
+  
+
+    This method is useful when you wish to set the texture coordinate of a single vertex,
+    or small subset of vertices. It is much more efficient than assigning a new
+    texture coordinate table to the mesh.texCoords property.
+  group: Meshes
+  name: mesh.texCoord( i )
+  parameters:
+  - description: int, the index of the texture coordinate in the `mesh`
+    name: i
+  - description: float, the x value to set vertex i's texture coordinate to
+    name: x
+  - description: float, the y value to set vertex i's texture coordinate to
+    name: y
+  - description: vec2, the texture coordinate value to set on vertex i
+    name: vec2
+  related: [mesh, mesh.vertex, mesh.color]
+  returns: If called with one argument (the index of the vertex) then this returns
+    a `vec2` value representing the texture coordinate at that vertex.
+  syntax: |
+    t = myMesh:texCoord( i )
+    myMesh:texCoord( i, x, y )
+    myMesh:texCoord( i, vec2 )
+#---------------------------------
+
+#---------------------------------
+# mesh.color()
+#---------------------------------
+- id: mesh.color
+  category: method
+  description: >
+    When called with one argument, `i`, this method returns the
+    color at the index specified by `i`. When called with more arguments, this
+    method sets the color at index `i` to the value provided by `r`, `g`, `b`,
+    `a` or the given `color` object.
+  
+
+    This method is useful when
+    you wish to set the color of a single vertex, or small subset of vertices. It
+    is much more efficient than assigning a new color table to the mesh.colors property.
+  group: Meshes
+  name: mesh.color( i )
+  parameters:
+  - description: int, the index of the color in the `mesh`
+    name: i
+  - description: int, the red value to set vertex i's color to (0 to 255)
+    name: r
+  - description: int, the green value to set vertex i's color to (0 to 255)
+    name: g
+  - description: int, the blue value to set vertex i's color to (0 to 255)
+    name: b
+  - description: int, the alpha value to set vertex i's color to (0 to 255)
+    name: a
+  - description: color, the color to set vertex i to
+    name: color
+  related: [mesh, mesh.vertex, mesh.texCoord, color]
+  returns: If called with one argument (the index of the vertex) then this returns
+    a `color` object representing the color at that vertex.
+  syntax: |
+    c = myMesh:color( i )
+    myMesh:color( i, r, g, b )
+    myMesh:color( i, r, g, b, a )
+    myMesh:color( i, color )     
+#---------------------------------
+
+#---------------------------------
+# mesh.normal()
+#---------------------------------       
+- id: mesh.normal
+  category: method
+  description: >
+    When called with one argument, `i`, this method returns the
+    normal at the index specified by `i`. When called with more arguments,
+    this method sets the normal at index `i` to the value provided by `x`,
+    `y`, `z` or a `vec3`.
+  group: Meshes
+  name: mesh.normal( i )
+  parameters:
+  - description: int, the index of the vertex in the `mesh`
+    name: i
+  - description: float, the x magnitude of the normal for vertex i
+    name: x
+  - description: float, the y magnitude of the normal for vertex i
+    name: y
+  - description: float, the z magnitude of the normal for vertex i
+    name: z
+  - description: vec3, the normal to set vertex i to
+    name: vec3
+  related: [mesh, mesh.vertex, mesh.texCoord, mesh.color]
+  returns: If called with one argument (the index of the vertex) then this returns
+    a `vec3` value representing the normal of the vertex.
+  syntax: |
+    n = myMesh:normal( i )
+    myMesh:normal( i, x, y, z )
+    myMesh:normal( i, vec3 )
+#---------------------------------
+
+#---------------------------------
+# mesh.resize()
+#---------------------------------
+- id: mesh.resize
+  category: method
+  description: >
+    This method allows you to change the size of a `mesh`. This will resize all of the
+    data arrays contained in the mesh (i.e., vertices, texCoords, colors, normals). It will
+    also resize any custom attribute buffers defined by attached shaders.
+  group: Meshes
+  name: mesh.resize( size )
+  parameters:
+  - description: int, the number of elements in the mesh
+    name: size
+  related: [mesh, buffer.resize, meshOverview, mesh.clear]
+  syntax: |
+    myMesh:resize(30)
+#---------------------------------
+
+#---------------------------------
+# mesh.buffer()
+#---------------------------------
+- id: mesh.buffer
+  category: method
+  description: >
+    This method returns the attribute buffer for particular mesh property. Buffers
+    allow direct access to a mesh's internal data. For example, you can access the
+    vertex positions of a mesh by calling myMesh:buffer("position"). You can then
+    modify the returned buffer directly, and the mesh's data will be updated automatically.
+
+    
+    If a mesh has a shader assigned to it, then you can also use the `buffer` method
+    to fetch and manipulate attribute arrays that have been declared in your shader.
+    
+    
+    When you fetch a custom attribute buffer from a mesh, it is initially sized to the same 
+    size as the mesh's vertices array (i.e. the "position" buffer).
+    
+    
+    For example, if your shader has an attribute named "myAttribute" and you have assigned
+    this shader to your mesh's `shader` property, then you can access the attribute array with
+    `myMesh:buffer("myAttribute")` and set its data.
+  group: Meshes
+  name: mesh.buffer( name )
+  parameters:
+  - description: >
+      string, either "position", "texCoord", "color" or "normal" or an attribute
+      name declared in an attached shader
+    name: name
+  related: [mesh, buffer, shader]
+  returns: A buffer object allowing direct access to an array of mesh data of a particular type
+  syntax: |
+    b = myMesh:buffer("position")
+    b = myMesh:buffer("texCoord")
+    b = myMesh:buffer("color")
+    b = myMesh:buffer("normal")
+#---------------------------------
+
+#---------------------------------
+# buffer
+#---------------------------------      
+- id: buffer
+  category: type
+  description: >
+    The buffer type is used in the context of a mesh to provide fast, in-place access to
+    mesh data, such as vertices, texture coordinates, and even custom attribute arrays. Buffers simply
+    represent an array of data with the following possible types: `float`, `vec2`, `vec3`, `vec4`, and `color`.
+    
+    
+    You do not create buffers directly. Instead, you access the built-in buffers on a mesh using their
+    predefined names, or you can access `attribute` variables declared in your custom shader.
+    
+    
+    A mesh contains several built-in buffers (for its vertex positions, texture coordinates, colors, and normals).
+    These can be accessed through the mesh:buffer("bufferName") method.
+  examples:
+  - example: |
+      -- Accessing a built-in buffer
+      ------------------------------
+      -- Create a mesh
+      myMesh = mesh()
+      
+      -- Access its position buffer
+      posBuffer = myMesh:buffer("position")
+      
+      -- Resize the buffer
+      posBuffer:resize(30)
+      
+      -- Add some random vertices
+      for i = 1,30 do
+          posBuffer[i] = vec2( math.random(-50,50),
+                               math.random(-50,50) )
+      end
+                         
+      -- Set all vertex colors to white
+      myMesh:setColors(255,255,255,255)
+      
+      -- Draw the mesh
+      myMesh:draw()
+  - example: |
+      -- Accessing a shader buffer
+      ------------------------
+      -- Create a mesh
+      myMesh = mesh()
+      
+      -- Assign a shader to myMesh
+      --  This shader has an attribute named 'myAttribute'
+      myMesh.shader = shader(asset.documents.MyShader)
+      
+      -- Fetch the attribute array
+      myAttrBuffer = myMesh:buffer("myAttribute")
+      
+      -- Resize our buffer 
+      myAttrBuffer:resize(30)
+
+      -- Add some random numbers
+      for i = 1,30 do
+          myAttrBuffer[i] = math.random(-50,50)
+      end
+
+      -- The shader will now use this data
+      --  when myMesh is drawn
+  group: Buffers
+  name: buffer
+  parameters:
+  - description: boolean, indicates whether this buffer should be treated as an instanced buffer. Defaults to `false`.
+    name: instanced
+  related: [mesh, meshOverview, buffer.resize]
+  returns: The newly created empty buffer
+  syntax: |
+    b = myMesh:buffer("position")
+    b = myMesh:buffer("texCoord")
+    b = myMesh:buffer("color")
+    b = myMesh:buffer("normal")
+    b = myMesh:buffer("myAttrib")
+
+    b.instanced = true
+#---------------------------------
+
+#---------------------------------
+# buffer.resize()
+#---------------------------------
+- id: buffer.resize
+  category: method
+  description: >
+    This method allows you to change the size of a `buffer`. In general, you want to ensure
+    your buffers have the same number of elements as the mesh that they belong to (i.e. the
+    same as your `mesh.size`).
+    
+    
+    Buffers are initially sized to the same size as the "position" buffer in their attached
+    mesh (i.e. `mesh.vertices`). Using `mesh.resize` will resize all mesh buffers,
+    including your custom buffers.
+  group: Buffers
+  name: buffer.resize( size )
+  parameters:
+  - description: int, the number of elements in the buffer
+    name: size
+  related: [buffer, meshOverview, mesh.buffer, mesh.resize]
+  syntax: |
+    myBuffer:resize(30)
+#---------------------------------
+
+#---------------------------------
+# buffer.clear()
+#---------------------------------
+- id: buffer.clear
+  category: method
+  description: >
+    This method clears all data from the buffer and sets its size to 0.
+  group: Buffers
+  name: buffer.clear()
+  related: [buffer.resize, buffer]
+  syntax: |
+    myBuffer:clear()
+#---------------------------------
+
+#---------------------------------
+# buffer.get()
+#---------------------------------
+- id: buffer.get
+  category: method
+  description: >
+    This method returns a copy of the data in `buffer` as a Lua table.
+  group: Buffers
+  name: buffer.get()
+  related: [buffer.set, buffer]
+  returns: A table containing the data in `buffer`
+  syntax: |
+    myTable = myBuffer:get()
+#---------------------------------
+
+#---------------------------------
+# buffer.set()
+#---------------------------------
+- id: buffer.set
+  category: method
+  description: >
+    This method sets the content of `buffer` to the data contained in `table`.
+  group: Buffers
+  name: buffer.set( table )
+  parameters:
+  - description: table, a table of vec2, vec3, vec4 or color
+    name: table
+  related: [buffer.get, buffer]
+  syntax: |
+    myBuffer:set( myTable )
+#---------------------------------
+
+#---------------------------------
+# shader
+#---------------------------------      
+- id: shader
+  category: type
+  description: >
+    This type represents a GLSL shader program. Shader programs are an advanced
+    graphical tool that can be used in conjunction with mesh to provide complex
+    graphical effects.
+    
+    
+    Shaders consist of two components, a vertex program and a fragment program.
+    The vertex program is run on the GPU for each vertex in the mesh, and the
+    fragment program is run for each fragment (similar to a pixel) drawn on the
+    screen.
+    
+    
+    You can, for example, have a shader that distorts the vertices of a mesh
+    according to a mathematical function. Or a shader that inverts the colors
+    of a mesh's texture, and so on.
+    
+    
+    All of Codea's basic rendering effects are provided using shaders. So by
+    supplying your own shaders, you can completely override how Codea renders
+    elements to the screen.
+    
+    
+    In addition to loading shaders through shader packs, advanced users may also
+    access the `vertexProgram` and `fragmentProgram` properties of `shader` to 
+    read and write the shader program strings directly.
+  examples:
+  - example: |
+      -- Create a shader
+      myShader = shader(asset.documents.MyShader)
+      
+      -- Assign it to a mesh
+      myMesh.shader = myShader
+  group: Shaders
+  name: shader
+  parameters:
+  - description: string, a string defining the vertex program of the shader
+    name: vertexProgram
+  - description: string, a string defining the fragment program of the shader
+    name: fragmentProgram
+  related: [shaderOverview, mesh, meshOverview, mesh.buffer]
+  returns: A newly created shader
+  syntax: |
+    s = shader()
+    s = shader(asset.documents.MyShader)
+    s = shader(vertexProgram, 
+               fragmentProgram)
+#---------------------------------
+
+#---------------------------------
+# triangulate()
+#---------------------------------      
+- id: triangulate
+  category: function
+  description: Takes an array of points representing a polygon and decomposes it
+    into a list of triangles. Points must be in clockwise or anti-clockwise order.
+  group: Geometry Functions    
+  name: triangulate( points )
+  parameters:
+  - description: table, an array of vec2 objects representing a polygon
+    name: points
+  related: []
+  returns: >
+    A triangle list generated from the supplied polygon in the form { t1p1,
+    t1p2, t1p3, t2p1, t2p2, t2p3, ..., tNp3 }
+  syntax: triangleVertices = triangulate( points )
+#---------------------------------

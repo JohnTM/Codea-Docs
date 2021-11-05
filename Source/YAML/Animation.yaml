@@ -1,0 +1,923 @@
+id: animation
+name: Animation
+subtitle: Animate values and objects using tweens
+ordering:
+    - Animating Values
+    - Looping Types    
+    - Easing Types
+functions:
+#---------------------------------
+# tween
+#---------------------------------               
+- category: function
+
+  description: >
+    Animates values in `subject` until they are equal to the key value pairs specified the table `target` over `time` seconds. The optional `easing` type and `callback` can also be specified.    
+    
+    
+    `callback` is a function that will be called when the tween has finished animating. Any additional parameters passed to `tween`
+    are forwarded to the `callback` function as additional arguments.
+    
+    
+    `tween` returns a table that can be used as a unique identifier to identify the tween. This table can be passed to `tween.stop`, `tween.reset` and `tween.play`. 
+    Note that tweens play by default upon initialization.
+    
+    
+    Note that the `easing` parameter may be passed in place of the `options` table, this will assume the default loop type of `tween.loop.once`. If you would like to specify a custom
+    loop type, then pass a table for `options` with the keys 'loop' and 'easing' set to the desired values.
+  group: Animating Values
+  id: tween
+  name: tween(time, subject, target)
+  
+  parameters:
+  - description: float, the duration of the tween in seconds.
+    name: time
+  - description: table or userdata, the object to animate.
+    name: subject
+  - description: >
+      table, a table of key-value pairs that will be animated in subject, i.e. {x = 10} will animate x to the value 10 in subject.
+    name: target
+  - description: |
+      string or function, an optional easing type for the tween which can be specified as a function or string. There is a complete set of easing functions that fall into the general categories:
+
+      **linear** The default easing function
+      **quad, cubic, quart, quint, expo, sine** Different variations of smooth acceleration and deceleration
+      **back** Causes the subject to overshoot and then pull back
+      **bounce** Causes the subject to hit the target and bounce several times
+      **elastic** Causes the subject to oscillate like a guitar string around the target
+      
+      Each easing curve has four variants with the exception of **linear**
+      
+      **in**
+      **out**
+      **inOut**
+      **outIn**
+      
+      Easing functions a combination of type and variant, such as 'elasticIn', 'quadInOut' and 'backOut'.
+
+      These easing functions were adapted from Emmanuel Oga’s easing library
+    name: easing
+  - description: >
+      table, may contain a loop type specified under the 'loop' key and an easing type specified under the 'easing' key
+    name: options    
+  - description: function, a function to call when this tween has completed
+    name: callback
+
+    
+  related:
+  - tween.stop
+  - tween.stopAll
+  - tween.reset
+  - tween.resetAll
+  - tweem.play
+  
+  returns:
+    table, returns a tween identifier that can be used to stop, reset or play the tween
+
+  examples:
+  - example: |
+      box = { x = 10, y = 10,
+              width = 20, height = 20,
+              fillColor = color(255) }
+
+      tween(1, box, {x = 100, y = 100})
+
+      tween(1, box, 
+              {fillColor = color(255,0,0)})
+
+      tween(1, box, {x = 100, y = 100},
+               tween.easing.quadIn)
+
+      tween(1, box, {x = 100, y = 100},
+                    tween.easing.linear)
+
+      tween(1, box, {x = 100, y = 100},
+                    tween.easing.linear,
+                    function() 
+                      print("Tween Ended") 
+                    end)
+
+      tween(1, box, {x = 100, y = 100},
+                    tween.easing.linear,
+                    function(param)
+                        print(param)
+                    end, "Tween Ended")
+  syntax: |
+    tween( time, subject, target )
+
+    tween( time, subject, target, easing )
+
+    tween( time, subject, target, easing,
+                          callback )
+
+    tween( time, subject, target, options,
+                          callback )
+
+    tween( time, subject, target, options,
+                          callback, ... )
+
+    tween( time, subject, target, options,
+                          callback, ... )
+#---------------------------------
+
+#---------------------------------
+# tween.stop
+#---------------------------------               
+- category: function
+
+  description: |
+    Stops the tween specified by `id`. This does not reset the subject's values to their initial state.
+    
+  group: Animating Values
+  id: tween.stop
+  name: tween.stop(id)
+  
+  parameters:
+  - description: table, the id of the tween to stop
+    name: id
+
+  related:
+  - tween.stop
+  - tween.stopAll
+  - tween.reset
+  - tween.resetAll
+
+  examples:
+  - example: |
+      point = { x = 10, y = 10}
+      id = tween(1, point, {x = 100})
+      tween.stop(id)
+  syntax: |
+    tween.stop( id )  
+
+#---------------------------------
+
+#---------------------------------
+# tween.stopAll
+#---------------------------------               
+- category: function
+
+  description: |
+    Stops all active tweens without resetting them.
+    
+  group: Animating Values
+  id: tween.stopAll
+  name: tween.stopAll()
+
+  related:
+  - tween.stop
+  - tween.stopAll
+  - tween.reset
+  - tween.resetAll
+
+  examples:
+  - example: |
+      point = { x = 10, y = 10}
+      tween(1, point, {x = 100})
+      tween(2, point, {x = 200})
+
+      -- all tweens will now cease animating
+      tween.stopAll()
+  syntax: |
+    tween.stopAll()
+
+#---------------------------------
+
+
+#---------------------------------
+# tween.reset
+#---------------------------------               
+- category: function
+
+  description: |
+    Stops the tween specified by `id` and resets the subject's values to their initial state.
+    
+  group: Animating Values
+  id: tween.reset
+  name: tween.reset(id)
+  
+  parameters:
+  - description: table, the id of the tween to reset
+    name: id
+
+  related:
+  - tween.stop
+  - tween.stopAll
+  - tween.reset
+  - tween.resetAll
+
+  examples:
+  - example: |
+      point = { x = 10, y = 10}
+      id = tween(1, point, {x = 100})
+      -- point.x will now now return to 10
+      tween.reset(id)
+  syntax: |
+    tween.reset( id )  
+
+#---------------------------------
+
+
+#---------------------------------
+# tween.resetAll
+#---------------------------------               
+- category: function
+
+  description: |
+    Resets all active tweens, returning all subject's to their state before the animation.
+    
+  group: Animating Values
+  id: tween.resetAll
+  name: tween.resetAll()
+
+  related:
+  - tween.stop
+  - tween.stopAll
+  - tween.reset
+  - tween.resetAll
+
+  examples:
+  - example: |
+      point = { x = 10, y = 10}
+      tween(1, point, {x = 100})
+      tween(2, point, {x = 200})
+
+      -- point will now return to {x = 10, y = 10}
+      tween.resetAll()
+  syntax: |
+    tween.resetAll()
+#---------------------------------
+
+#---------------------------------
+# tween.play
+#---------------------------------               
+- category: function
+
+  description: |
+    Plays the tween specified by `id`. This does not reset the subject's values to their initial state.
+    
+  group: Animating Values
+  id: tween.play
+  name: tween.play(id)
+  
+  parameters:
+  - description: table, the id of the tween to play
+    name: id
+
+  related:
+  - tween.stop
+  - tween.stopAll
+  - tween.reset
+  - tween.resetAll
+
+  examples:
+  - example: |
+      point = { x = 10, y = 10}
+      id = tween(1, point, {x = 100})
+      
+      function pauseTween(id)
+        tween.stop(id)
+      end
+      
+      function resumeTween(id)
+        tween.play(id)
+      end
+      
+  syntax: |
+    tween.play( id )  
+#---------------------------------
+
+#---------------------------------
+# tween.delay
+#---------------------------------               
+- category: function
+
+  description: >
+    This function creates a tween that simply waits for the specified duration. You might
+    use this to create a pause within a `tween.sequence`, or to delay the calling of 
+    a particular function.
+    
+    
+    Any additional arguments specified after the `callback` parameter will be passed as
+    arguments to the `callback` function.
+
+  group: Animating Values
+  id: tween.delay
+  name: tween.delay(duration, callback)
+  
+  parameters:
+  - description: number, the duration of the delay
+    name: duration
+  - description: function, optional callback function
+    name: callback
+
+  related:
+  - tween
+  - tween.sequence
+
+  examples:
+  - example: |
+      point = {x = 10, y = 10}
+      
+      t1 = tween(1, point, {x = 100})
+      
+      -- Create a delay
+      delay = tween.delay(1.0)
+
+      t2 = tween(1, point, {y = 150})
+
+      tween.sequence( t1, delay, t2 )
+  syntax: |
+    tween.delay( duration )
+    tween.delay( duration, callback )
+    tween.delay( duration, callback, ... )
+    
+  returns:
+    table, returns the tween identifier for the delay
+#---------------------------------
+
+#---------------------------------
+# tween.sequence
+#---------------------------------               
+- category: function
+
+  description: >
+    This function allows you to compose sequences made up of multiple tweens. Each call to the `tween` function
+    returns an **id**, `tween.sequence` accepts a list of these **id**s and plays them back one after the other.
+
+  group: Animating Values
+  id: tween.sequence
+  name: tween.sequence( t1, t2, ... )
+  
+  parameters:
+  - description: the id of a tween in the sequence
+    name: t1
+
+  related:
+  - tween
+  - tween.path
+  - tween.resetAll
+
+  examples:
+  - example: |
+      point = {x = 10, y = 10}
+      t1 = tween(1, point, {x = 100})
+      t2 = tween(1, point, {x = 50})
+      t3 = tween(1, point, {y = 150})
+      tween.sequence( t1, t2, t3 )
+  syntax: |
+    tween.sequence( t1, t2, t3, ... )
+    
+  returns:
+    table, returns the tween identifier for the first tween in the sequence
+#---------------------------------
+
+#---------------------------------
+# tween.path
+#---------------------------------               
+- category: function
+
+  description: >
+    `tween.path` is similar to `tween` except it accepts an array of target values. The resulting animation
+    interpolates across all the values in `targets` using a spline.
+
+  group: Animating Values
+  id: tween.path
+  name: tween.path( time, subject, targets )
+  
+  parameters:
+  - description: float, the duration of the tween
+    name: time
+  - description: table or userdata, the object to animate
+    name: subject
+  - description: table, an array of tables containing key-value pairs for each point along the path
+    name: targets
+  - description: >
+      table, may contain a loop type specified under the 'loop' key and an easing type specified under the 'easing' key
+    name: options
+  - description: >
+      function, one of the easing functions specified in `tween.easing`
+    name: easing    
+  - description: function, triggered when the animation is complete
+    name: callback
+
+  related:
+  - tween
+
+  examples:
+  - example: |
+      point = {x = 10, y = 10}
+
+      p1 = {x = 10, y = 10}
+      p2 = {x = 100, y = 10}
+      p3 = {x = 100, y = 100}
+      p4 = {x = 10, y = 100 }
+
+      tween.path( 4.0, point, {p1,p2,p3,p4,p1} )
+  syntax: |
+    tween.path( time, subject, targets )
+
+    tween.path( time, subject, 
+                targets, easing )    
+
+    tween.path( time, subject, 
+                targets, options )
+
+    tween.path( time, subject, 
+                targets, options, callback )
+
+    tween.path( time, subject, 
+                targets, options, 
+                callback, ... )
+                
+  returns:
+    table, returns a tween identifier that can be used to pause, reset or stop the tween
+#---------------------------------
+
+#---------------------------------
+# tween.loop.once
+#---------------------------------
+- category: const
+  description: >
+    Plays the tween once. This is the default loop type.
+  group: Looping Types
+  id: tween.loop.once
+  name: tween.loop.once
+  related:
+  - tween
+  syntax: tween.loop.once
+#---------------------------------
+
+#---------------------------------
+# tween.loop.forever
+#---------------------------------
+- category: const
+  description: >
+    Plays the tween over and over again, restarting it each time.
+  group: Looping Types
+  id: tween.loop.forever
+  name: tween.loop.forever
+  related:
+  - tween
+  syntax: tween.loop.forever
+#---------------------------------
+
+#---------------------------------
+# tween.loop.pingpong
+#---------------------------------
+- category: const
+  description: >
+    Plays the tween backwards after it finishes, and then continues to repeat it back and forth.
+  group: Looping Types
+  id: tween.loop.pingpong
+  name: tween.loop.pingpong
+  related:
+  - tween
+  syntax: tween.loop.pingpong
+#---------------------------------
+
+#---------------------------------
+# tween.easing.linear
+#---------------------------------
+- category: const
+  group: Easing Types
+  id: tween.easing.linear
+  name: tween.easing.linear
+  related:
+  - tween
+  syntax: tween.easing.linear
+#---------------------------------
+
+#---------------------------------
+# tween.easing.quadIn
+#---------------------------------
+- category: const
+  group: Easing Types
+  id: tween.easing.quadIn
+  name: tween.easing.quadIn
+  related:
+  - tween
+  syntax: tween.easing.quadIn
+#---------------------------------
+
+#---------------------------------
+# tween.easing.quadOut
+#---------------------------------
+- category: const
+  group: Easing Types
+  id: tween.easing.quadOut
+  name: tween.easing.quadOut
+  related:
+  - tween
+  syntax: tween.easing.quadOut
+#---------------------------------
+
+#---------------------------------
+# tween.easing.quadInOut
+#---------------------------------
+- category: const
+  group: Easing Types
+  id: tween.easing.quadInOut
+  name: tween.easing.quadInOut
+  related:
+  - tween
+  syntax: tween.easing.quadInOut
+#---------------------------------
+
+#---------------------------------
+# tween.easing.quadOutIn
+#---------------------------------
+- category: const
+  group: Easing Types
+  id: tween.easing.quadOutIn
+  name: tween.easing.quadOutIn
+  related:
+  - tween
+  syntax: tween.easing.quadOutIn
+#---------------------------------
+
+#---------------------------------
+# tween.easing.cubicIn
+#---------------------------------
+- category: const
+  group: Easing Types
+  id: tween.easing.cubicIn
+  name: tween.easing.cubicIn
+  related:
+  - tween
+  syntax: tween.easing.cubicIn
+#---------------------------------
+
+#---------------------------------
+# tween.easing.cubicOut
+#---------------------------------
+- category: const
+  group: Easing Types
+  id: tween.easing.cubicOut
+  name: tween.easing.cubicOut
+  related:
+  - tween
+  syntax: tween.easing.cubicOut
+#---------------------------------
+
+#---------------------------------
+# tween.easing.cubicInOut
+#---------------------------------
+- category: const
+  group: Easing Types
+  id: tween.easing.cubicInOut
+  name: tween.easing.cubicInOut
+  related:
+  - tween
+  syntax: tween.easing.cubicInOut
+#---------------------------------
+
+#---------------------------------
+# tween.easing.cubicOutIn
+#---------------------------------
+- category: const
+  group: Easing Types
+  id: tween.easing.cubicOutIn
+  name: tween.easing.cubicOutIn
+  related:
+  - tween
+  syntax: tween.easing.cubicOutIn
+#---------------------------------
+
+#---------------------------------
+# tween.easing.quartIn
+#---------------------------------
+- category: const
+  group: Easing Types
+  id: tween.easing.quartIn
+  name: tween.easing.quartIn
+  related:
+  - tween
+  syntax: tween.easing.quartIn
+#---------------------------------
+
+#---------------------------------
+# tween.easing.quartOut
+#---------------------------------
+- category: const
+  group: Easing Types
+  id: tween.easing.quartOut
+  name: tween.easing.quartOut
+  related:
+  - tween
+  syntax: tween.easing.quartOut
+#---------------------------------
+
+#---------------------------------
+# tween.easing.quartInOut
+#---------------------------------
+- category: const
+  group: Easing Types
+  id: tween.easing.quartInOut
+  name: tween.easing.quartInOut
+  related:
+  - tween
+  syntax: tween.easing.quartInOut
+#---------------------------------
+
+#---------------------------------
+# tween.easing.quartOutIn
+#---------------------------------
+- category: const
+  group: Easing Types
+  id: tween.easing.quartOutIn
+  name: tween.easing.quartOutIn
+  related:
+  - tween
+  syntax: tween.easing.quartOutIn
+#---------------------------------
+
+#---------------------------------
+# tween.easing.quintIn
+#---------------------------------
+- category: const
+  group: Easing Types
+  id: tween.easing.quintIn
+  name: tween.easing.quintIn
+  related:
+  - tween
+  syntax: tween.easing.quintIn
+#---------------------------------
+
+#---------------------------------
+# tween.easing.quintOut
+#---------------------------------
+- category: const
+  group: Easing Types
+  id: tween.easing.quintOut
+  name: tween.easing.quintOut
+  related:
+  - tween
+  syntax: tween.easing.quintOut
+#---------------------------------
+
+#---------------------------------
+# tween.easing.quintInOut
+#---------------------------------
+- category: const
+  group: Easing Types
+  id: tween.easing.quintInOut
+  name: tween.easing.quintInOut
+  related:
+  - tween
+  syntax: tween.easing.quintInOut
+#---------------------------------
+
+#---------------------------------
+# tween.easing.quintOutIn
+#---------------------------------
+- category: const
+  group: Easing Types
+  id: tween.easing.quintOutIn
+  name: tween.easing.quintOutIn
+  related:
+  - tween
+  syntax: tween.easing.quintOutIn
+#---------------------------------
+
+#---------------------------------
+# tween.easing.expoIn
+#---------------------------------
+- category: const
+  group: Easing Types
+  id: tween.easing.expoIn
+  name: tween.easing.expoIn
+  related:
+  - tween
+  syntax: tween.easing.expoIn
+#---------------------------------
+
+#---------------------------------
+# tween.easing.expoOut
+#---------------------------------
+- category: const
+  group: Easing Types
+  id: tween.easing.expoOut
+  name: tween.easing.expoOut
+  related:
+  - tween
+  syntax: tween.easing.expoOut
+#---------------------------------
+
+#---------------------------------
+# tween.easing.expoInOut
+#---------------------------------
+- category: const
+  group: Easing Types
+  id: tween.easing.expoInOut
+  name: tween.easing.expoInOut
+  related:
+  - tween
+  syntax: tween.easing.expoInOut
+#---------------------------------
+
+#---------------------------------
+# tween.easing.expoOutIn
+#---------------------------------
+- category: const
+  group: Easing Types
+  id: tween.easing.expoOutIn
+  name: tween.easing.expoOutIn
+  related:
+  - tween
+  syntax: tween.easing.expoOutIn
+#---------------------------------
+
+#---------------------------------
+# tween.easing.sineIn
+#---------------------------------
+- category: const
+  group: Easing Types
+  id: tween.easing.sineIn
+  name: tween.easing.sineIn
+  related:
+  - tween
+  syntax: tween.easing.sineIn
+#---------------------------------
+
+#---------------------------------
+# tween.easing.sineOut
+#---------------------------------
+- category: const
+  group: Easing Types
+  id: tween.easing.sineOut
+  name: tween.easing.sineOut
+  related:
+  - tween
+  syntax: tween.easing.sineOut
+#---------------------------------
+
+#---------------------------------
+# tween.easing.sineInOut
+#---------------------------------
+- category: const
+  group: Easing Types
+  id: tween.easing.sineInOut
+  name: tween.easing.sineInOut
+  related:
+  - tween
+  syntax: tween.easing.sineInOut
+#---------------------------------
+
+#---------------------------------
+# tween.easing.sineOutIn
+#---------------------------------
+- category: const
+  group: Easing Types
+  id: tween.easing.sineOutIn
+  name: tween.easing.sineOutIn
+  related:
+  - tween
+  syntax: tween.easing.sineOutIn
+#---------------------------------
+
+#---------------------------------
+# tween.easing.backIn
+#---------------------------------
+- category: const
+  group: Easing Types
+  id: tween.easing.backIn
+  name: tween.easing.backIn
+  related:
+  - tween
+  syntax: tween.easing.backIn
+#---------------------------------
+
+#---------------------------------
+# tween.easing.backOut
+#---------------------------------
+- category: const
+  group: Easing Types
+  id: tween.easing.backOut
+  name: tween.easing.backOut
+  related:
+  - tween
+  syntax: tween.easing.backOut
+#---------------------------------
+
+#---------------------------------
+# tween.easing.backInOut
+#---------------------------------
+- category: const
+  group: Easing Types
+  id: tween.easing.backInOut
+  name: tween.easing.backInOut
+  related:
+  - tween
+  syntax: tween.easing.backInOut
+#---------------------------------
+
+#---------------------------------
+# tween.easing.backOutIn
+#---------------------------------
+- category: const
+  group: Easing Types
+  id: tween.easing.backOutIn
+  name: tween.easing.backOutIn
+  related:
+  - tween
+  syntax: tween.easing.backOutIn
+#---------------------------------
+
+#---------------------------------
+# tween.easing.bounceIn
+#---------------------------------
+- category: const
+  group: Easing Types
+  id: tween.easing.bounceIn
+  name: tween.easing.bounceIn
+  related:
+  - tween
+  syntax: tween.easing.bounceIn
+#---------------------------------
+
+#---------------------------------
+# tween.easing.bounceOut
+#---------------------------------
+- category: const
+  group: Easing Types
+  id: tween.easing.bounceOut
+  name: tween.easing.bounceOut
+  related:
+  - tween
+  syntax: tween.easing.bounceOut
+#---------------------------------
+
+#---------------------------------
+# tween.easing.bounceInOut
+#---------------------------------
+- category: const
+  group: Easing Types
+  id: tween.easing.bounceInOut
+  name: tween.easing.bounceInOut
+  related:
+  - tween
+  syntax: tween.easing.bounceInOut
+#---------------------------------
+
+#---------------------------------
+# tween.easing.bounceOutIn
+#---------------------------------
+- category: const
+  group: Easing Types
+  id: tween.easing.bounceOutIn
+  name: tween.easing.bounceOutIn
+  related:
+  - tween
+  syntax: tween.easing.bounceOutIn
+#---------------------------------
+
+#---------------------------------
+# tween.easing.elasticIn
+#---------------------------------
+- category: const
+  group: Easing Types
+  id: tween.easing.elasticIn
+  name: tween.easing.elasticIn
+  related:
+  - tween
+  syntax: tween.easing.elasticIn
+#---------------------------------
+
+#---------------------------------
+# tween.easing.elasticOut
+#---------------------------------
+- category: const
+  group: Easing Types
+  id: tween.easing.elasticOut
+  name: tween.easing.elasticOut
+  related:
+  - tween
+  syntax: tween.easing.elasticOut
+#---------------------------------
+
+#---------------------------------
+# tween.easing.elasticInOut
+#---------------------------------
+- category: const
+  group: Easing Types
+  id: tween.easing.elasticInOut
+  name: tween.easing.elasticInOut
+  related:
+  - tween
+  syntax: tween.easing.elasticInOut
+#---------------------------------
+
+#---------------------------------
+# tween.easing.elasticOutIn
+#---------------------------------
+- category: const
+  group: Easing Types
+  id: tween.easing.elasticOutIn
+  name: tween.easing.elasticOutIn
+  related:
+  - tween
+  syntax: tween.easing.elasticOutIn
+#---------------------------------
+
+

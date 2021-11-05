@@ -1,0 +1,356 @@
+id: touch
+name: Touch & Gestures
+subtitle: Detecting and Reacting to Touches and Pointers on the Screen
+ordering:
+    - Handling Touches
+    - Gestures
+    - Touch States
+    - Touch Types
+functions:
+#---------------------------------
+# CurrentTouch
+#---------------------------------
+- category: const
+  description: This global variable always represents the first available touch on
+    the screen. It is a `touch` datatype, see the related items for more information.
+  examples:
+  - example: |
+      function draw()
+          background( 0 )
+          fill( 255, 0, 0 )
+          ellipse( CurrentTouch.x, CurrentTouch.y, 300 )
+      end
+  group: Handling Touches
+  id: CurrentTouch
+  name: CurrentTouch
+  related:
+  - touch
+  syntax: CurrentTouch
+#---------------------------------
+    
+#---------------------------------
+# touch
+#---------------------------------    
+- category: type
+  description: This type represents data about a single touch on the screen
+  group: Handling Touches
+  id: touch
+  name: touch
+  parameters:
+  - description: int, a unique identifier for this touch
+    name: id
+  - description: vec2, specifies the position of the touch on the screen
+    name: pos
+  - description: vec2, specifies the position, from the previous frame, of the touch on the screen
+    name: prevPos
+  - description: vec2, specifies the precise position of the touch on the screen (when available, for example, when using a stylus)
+    name: precisePos
+  - description: vec2, specifies the precise position, from the previous frame, of the touch on the screen (when available, for example, when using a stylus)
+    name: precisePrevPos
+  - description: vec2, specifies the delta since the last frame, the amount the touch has moved
+    name: delta
+  - description: float, when available, specifies the force of the touch
+    name: force
+  - description: float, when available, specifies the maximum possible force of a touch
+    name: maxForce
+  - description: float, stylus only, angle in radians of the stylus with the surface of the screen. A value of `0` indicates the stylus is parallel to the screen, a value of Pi/2 indicates a stylus perpendicular to the screen
+    name: altitude
+  - description: float, stylus only, angle in radians of the direction in which the stylus is pointing
+    name: azimuth
+  - description: vec2, stylus only, a unit vector which points in the direction of the stylus
+    name: azimuthVec
+  - description: the type of the touch, can be DIRECT, INDIRECT, STYLUS or POINTER
+    name: type
+  - description: the state of the touch, can be BEGAN, CHANGED, ENDED or CANCELLED
+    name: state
+  - description: how many times the touch has been tapped
+    name: tapCount
+  - description: the time when the touch occurred or when it was last updated
+    name: timestamp
+  related:
+  - touched
+  - CurrentTouch
+  syntax: |
+    touch.id
+    touch.pos
+    touch.prevPos
+    touch.precisePos
+    touch.precisePrevPos
+    touch.delta
+    touch.force
+    touch.maxForce
+    touch.altitude
+    touch.azimuth
+    touch.azimuthVec
+    touch.type
+    touch.state
+    touch.tapCount
+    touch.timestamp
+    
+#---------------------------------
+# touched
+#---------------------------------
+- category: event
+  description: >
+    Codea calls this function, if it is defined in your project, whenever a finger touches the screen in the viewing area. The `touched` function is passed a `touch` object containing information about the touch, such as position, type, state, and so on.
+    
+    
+    If the user touches the screen with multiple fingers this function is called repeatedly for each active touch. `touch` objects have an `id` (`touch.id`) to allow you to store, track and differentiate them over repeated calls to this function. A touch will maintain its `id` through its life time (from state BEGAN through to state ENDED or CANCELLED)
+    
+    
+    You can use the `type` of the touch to determine whether it comes from a finger (`DIRECT`), stylus (`STYLUS`) or a trackpad or mouse (`POINTER`)
+  group: Handling Touches
+  id: touched
+  name: function touched(touch)
+  parameters:
+  - description: the gesture object containing information about this event
+    name: gesture
+  related:
+  - touch
+  - CurrentTouch
+  syntax: |
+    function touched(touch)
+
+#---------------------------------
+# gesture
+#---------------------------------
+- category: type
+  description: >
+    Gestures are used to represent interaction from a pointer or trackpad, such as hovering or scrolling in the viewer.
+    
+    
+    Codea supports two types of gestures for the viewer, `hover` and `scroll`.
+    
+    
+    Hover gestures occur when moving a pointer over the viewer. When this happens Codea calls the global `function hover(gesture)` and passes a `gesture` object containing information about the hover event. The gesture contains a `state` and `location`. Location is a `vec2` indicating where the pointer is hovering over the viewer. The `state` can be `BEGAN`, `CHANGED`, or `ENDED`
+    
+    
+    Scroll gestures occur when two-finger scrolling is detected on a trackpad. Codea calls the global `function scroll(gesture)` and passes a `gesture` object containing information about the scroll event. The gesture contains `state`, `location`, `translation`, and `delta`. State and location are similar to hover (above). `translation` is a `vec2` reflecting the total amount of 2D translation that has occurred since the scrolling began. `delta` is a `vec2` of the amount of 2D translation since the last time `scroll` was called
+    
+    
+    Pinch gestures occur when two-finger pinching is detected on a trackpad. Codea calls the global `function pinch(gesture)` and passes a `gesture` object containing information about the pinch event. The gesture contains `state`, `location`, `pinchScale`, and `pinchVelocity`. State and location are similar to hover and scoll (above). `pinchScale` is a number reflecting the total amount of scale that has occurred since the pinch began. `pinchVelocity` is a number of the velocity of of the pinch scale in scale factor per second
+    
+    
+    Gestures also include information on which modifier keys have been pressed during the event, such as `gesture.shift` and `gesture.command`. If these values are `true` it indicates that modifier key was held down
+  group: Gestures
+  id: gesture
+  name: gesture
+  parameters:
+  - description: the state of the gesture, can be BEGAN, CHANGED or ENDED
+    name: state
+  - description: vec2, the location of the gesture over the viewer
+    name: location
+  - description: vec2, scroll gestures only. The total amount of 2D translation since the gesture began
+    name: translation
+  - description: vec2, scroll gestures only. The amount of 2D translation since the last time `scroll` was called
+    name: delta
+  - description: number, pinch gestures only. The scale of the pinch relative to the two touches since the gesture began
+    name: pinchScale
+  - description: number, pinch gestures only. The velocity of the change in pinch scale in scale factor per second
+    name: pinchVelocity
+  - description: bool, true if the alt (alternate / option) modifier key was held down
+    name: alt
+  - description: bool, true if the control modifier key was held down
+    name: control
+  - description: bool, true if the command modifier key was held down
+    name: command
+  - description: bool, true if the shift modifier key was held down
+    name: shift
+  - description: bool, true if the caps lock key was held down
+    name: capsLock
+  related:
+  - hover
+  - scroll
+  - pinch
+  - vec2
+  - BEGAN
+  - CHANGED
+  - ENDED
+  syntax: |
+    gesture.state
+    gesture.location
+    gesture.translation
+    gesture.delta
+    gesture.pinchScale
+    gesture.pinchVelocity
+    gesture.alt
+    gesture.control
+    gesture.command
+    gesture.shift
+    gesture.capsLock
+    
+#---------------------------------
+# hover
+#---------------------------------
+- category: event
+  description: >
+    Codea calls this function, if it is defined in your project, whenever a pointer hovers in the viewer. Hovering occurs when a connected mouse or trackpad pointer moves over the screen without clicking. The `hover` function is passed a `gesture` parameter which contains the x,y location of the event as a `vec2`
+    
+    
+    The gesture parameter of this function also has a `state` field, which can tell you if the event has `BEGAN`, or `CHANGED` since the last call, or `ENDED`. The `hover` function will be called continuously as the pointer moves across the screen with updated x,y coordinates until it eventually ends due to the pointer moving out of the viewer area, or the pointer fading if the input device is not touched
+  group: Gestures
+  id: hover
+  name: function hover(gesture)
+  parameters:
+  - description: the gesture object containing information about this event
+    name: gesture
+  related:
+  - gesture
+  - scroll
+  - pinch
+  - vec2
+  syntax: |
+    function hover(gesture)
+    
+#---------------------------------
+# scroll
+#---------------------------------
+- category: event
+  description: >
+    Codea calls this function, if it is defined in your project, whenever a scroll event occurs in the viewer. This is usually triggered by a two-finger drag on an attached trackpad input device
+    
+    
+    The gesture parameter of this function contains information about the scroll event. Including its `location`, `translation` and `delta`. Translation (vec2) is the 2D magnitude of the scroll since the scroll began (`gesture.state == BEGAN`). Delta (vec2) is the 2D magnitude of the scroll since the last scroll update. The delta can be accumulated to track a scroll over time, or the translation can be applied to a fixed starting point to compute the desired end point — the starting point can be updated at the `ENDED` state of the scroll event
+  group: Gestures
+  id: scroll
+  name: function scroll(gesture)
+  parameters:
+  - description: the gesture object containing information about this event
+    name: gesture
+  related:
+  - gesture
+  - hover
+  - pinch
+  - vec2
+  syntax: |
+    function scroll(gesture)
+
+#---------------------------------
+# pinch
+#---------------------------------
+- category: event
+  description: >
+    Codea calls this function, if it is defined in your project, whenever a pinch event occurs in the viewer. This is triggered by a two-finger pinch on an attached trackpad input device
+    
+    
+    The gesture parameter of this function contains information about the pinch event. Including its `location`, `pinchScale` and `pinchVelocity`. pinchScale (float) is the magnitude of the pinch since the pinch began (`gesture.state == BEGAN`). pinchVelocity (float) is the velocity of the pinch in scale factor per second. The velocity can be accumulated to perform a scale over time, centered around `location`
+  group: Gestures
+  id: pinch
+  name: function pinch(gesture)
+  parameters:
+  - description: the gesture object containing information about this event
+    name: gesture
+  related:
+  - gesture
+  - hover
+  - scroll
+  - vec2
+  syntax: |
+    function pinch(gesture)
+
+#---------------------------------
+# BEGAN
+#---------------------------------
+- category: const
+  description: This state occurs when a touch or gesture first begins
+  group: Touch States
+  id: BEGAN
+  name: BEGAN
+  related:
+  - touch
+  syntax: BEGAN
+#---------------------------------
+
+#---------------------------------
+# CHANGED
+#---------------------------------
+- category: const
+  description: This state occurs when a touch or gesture changes position
+  group: Touch States
+  id: CHANGED
+  name: CHANGED
+  related:
+  - touch
+  syntax: CHANGED
+#---------------------------------
+
+#---------------------------------
+# ENDED
+#---------------------------------
+- category: const
+  description: This state occurs when a touch or gesture ends (e.g., by the user lifting their finger from the screen)
+  group: Touch States
+  id: ENDED
+  name: ENDED
+  related:
+  - touch
+  syntax: ENDED
+#---------------------------------
+
+#---------------------------------
+# CANCELLED
+#---------------------------------
+- category: const
+  description: This state occurs when the system interrupts the touch for some reason (e.g., system alert,
+    notification window slid down, multitasking entered). This state can generally be handled similarly to
+    `ENDED`.
+  group: Touch States
+  id: CANCELLED
+  name: CANCELLED
+  related:
+  - touch
+  - ENDED
+  syntax: CANCELLED
+#---------------------------------
+
+#---------------------------------
+# DIRECT
+#---------------------------------
+- category: const
+  description: Direct touches occur when the user's finger touches the screen
+  group: Touch Types
+  id: DIRECT
+  name: DIRECT
+  related:
+  - touch
+  syntax: DIRECT
+#---------------------------------
+
+#---------------------------------
+# INDIRECT
+#---------------------------------
+- category: const
+  description: Indirect touches are generated by touch input devices that are separate from the screen. For example, a remote pointing device
+  group: Touch Types
+  id: INDIRECT
+  name: INDIRECT
+  related:
+  - touch
+  syntax: INDIRECT
+#---------------------------------
+
+#---------------------------------
+# STYLUS
+#---------------------------------
+- category: const
+  description: A stylus touch occurs when a stylus interacts with the device's screen
+  group: Touch Types
+  id: STYLUS
+  name: STYLUS
+  related:
+  - touch
+  syntax: STYLUS
+#---------------------------------
+
+#---------------------------------
+# POINTER
+#---------------------------------
+- category: const
+  description: A pointer touch occurs when using an indirect input device such as a trackpad or mouse
+  group: Touch Types
+  id: POINTER
+  name: POINTER
+  related:
+  - touch
+  syntax: POINTER
+#---------------------------------

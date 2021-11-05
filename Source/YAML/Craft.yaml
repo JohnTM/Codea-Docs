@@ -1,0 +1,3176 @@
+id: craft
+name: Craft
+subtitle: Advanced 3D Rendering, Physics and Voxels
+ordering:
+    - Overview
+    - Entities
+    - Rendering
+    - Physics
+    - Voxels
+    - AR
+    - Noise
+functions:
+
+#---------------------------------
+# Craft Overview
+#---------------------------------
+- id: craftOverview
+  category: overview
+  description: >
+    Craft provides extended capabilities to Codea that make it much easier to create 3D scenes, physics and game logic.
+    Craft introduces a number of new classes. These include `craft.entity`, which is the basic building block of 3D scenes.
+
+
+    Several systems are introduced, including:
+
+    `craft.scene` - The core class in craft, draws and updates all other objects and systems
+
+    `craft.physics` - Physics settings and helper functions
+
+    `craft.voxels` - Streaming voxel terrain, block types and helper functions
+
+    `craft.ar` - Augmented Reality, world tracking and helper functions
+
+
+    Each system can be used to access built-in objects, change settings or trigger specialised features.
+  group: Overview
+  name: Craft
+  related:
+  - craft.scene
+  - craft.physics
+  - craft.voxels
+  - craft.ar
+  - craft.entity
+#---------------------------------
+
+#---------------------------------
+# craft.scene
+#---------------------------------
+- category: type
+  description: >
+    In order to use craft you must make a scene. Scenes are used to create, update and draw all entities and components.
+    Scenes also control basic things, such as ambient lighting, fog, the sky and contain references to some built-in entities.
+
+
+    Built-in entities include:
+
+    a main `camera` that renders the scene by default
+
+    a 'sun' which is a directional light
+
+    a 'sky' which is a `renderer` with a `Materials:Skybox` material used to draw the background
+
+  examples:
+  - example: |
+      function setup()
+      	-- Create the scene
+      	scene = craft.scene()
+
+        -- Move the main camera
+        scene.camera.position = vec3(0, -10, 0)
+
+        -- Adjust the scene lighting
+        scene.sun.rotation = quat.eulerAngles(45,0,45)
+        scene.ambientColor = color(90,90,90)
+
+        -- Turn on fog and set distances and color
+        scene.fogEnabled = true
+        scene.fogNear = 10
+        scene.fogFar = 50
+        scene.fogColor = color(255,255,255)
+
+        -- Get the sky material and change the sky and horizon colors
+        local skyMaterial = scene.sky.material
+        skyMaterial.sky = color(255,100,150)
+        skyMaterial.horizon = color(0,0,0)
+      end
+
+      function update(dt)
+      	-- Update the scene (including physics, voxels and other systems)
+      	scene:update(dt)
+      end
+
+      function draw()
+      	update(DeltaTime)
+
+      	-- Draw the scene (must be done within the draw function)
+      	scene:draw()
+      end
+
+
+  group: Entities
+  id: craft.scene
+  name: craft.scene
+  parameters:
+  - description: entity, the main camera entity (contains a camera component)
+    name: camera
+  - description: entity, the sun entity (contains a directional light component)
+    name: sun
+  - description: sky, the sky entity (contains a renderer with a Skybox material)
+    name: sky
+  - description: color, the ambient light color (for materials with lighting)
+    name: ambientColor
+  - description: bool, turns fog on and off
+    name: fogEnabled
+  - description: float, the distance where fog begins
+    name: fogNear
+  - description: float, the distance where fog reaches maximum density
+    name: fogFar
+  - description: color, the color of the fog
+    name: fogColor
+  - description: int, the current number of batches being rendered (the less the better performance you can expect)
+    name: renderBatchCount
+  - description: int, the current number of batches saved by frustum culling
+    name: renderBatchCullCount
+
+  syntax: |
+    scene = craft.scene()
+
+  related:
+  - craft.renderer
+  - craft.camera
+#---------------------------------
+
+
+#---------------------------------
+# craft.entity
+#---------------------------------
+- category: type
+  description: >
+    Entities are flexible objects that can be customised to change their appearance and behaviour.
+    You can customise an entity by adding components. Each type of component serves a different purpose.
+    Renderer components change entity appearance, physics components give entities physical behaviour.
+
+  examples:
+  - example: |
+      scene = craft.scene()
+
+      -- Create a new entity
+      entity = scene:entity()
+
+      -- Attach a model and material for rendering
+      entity.model = craft.model.cube(vec3(1,1,1))
+      entity.material = craft.material(asset.builtin.Materials.Standard)
+
+      -- Rotate the entity
+      entity.eulerAngles = vec3(45, 0, 45)
+
+      -- Set the z position of the entity
+      entity.z = -10
+
+      -- Destroy the entity
+      entity:destroy()
+
+  group: Entities
+  id: craft.entity
+  name: craft.entity
+  parameters:
+  - description: model, the model used for drawing this entity (stored within the attached renderer component)
+    name: model
+  - description: material, the material used for drawing this entity (stored within the attached renderer component)
+    name: material
+  - description: vec3, the position of this entity in local coordinate space
+    name: position
+  - description: vec3, the position of this entity in world coordinate space
+    name: worldPosition
+  - description: quat, the rotation of this entity in local coordinate space
+    name: rotation
+  - description: quat, the rotation of this entity in world coordinate space
+    name: worldRotation
+  - description: vec3, the scale of this entity in local coordinate space
+    name: scale
+  - description: float, the x position of this entity in local coordinate space
+    name: x
+  - description: float, the y position of this entity in local coordinate space
+    name: y
+  - description: float, the z position of this entity in local coordinate space
+    name: z
+  - description: vec3, the rotation of this entity in local coordinate space expressed in euler angles
+    name: eulerAngles
+  - description: entity, the parent of this entity (in the transform hierarchy)
+    name: parent
+  - description: table [readonly], an array of children entities attached to this entity
+    name: children
+  - description: bool, turn on and off to enable and disable entity in the scene
+    name: active
+  syntax: |
+    myEntity = scene:entity()
+  related:
+  - craft.renderer
+#---------------------------------
+
+#---------------------------------
+# entity.add
+#---------------------------------
+- category: method
+  description: >
+    Adds a component to this entity. There are several built-in components that can be added, such as `craft.renderer`, `craft.shape.box` and others.
+    Lua classes can also be added as a component. Any additional parameters beyond the type will be forwarded to the component itself.
+    For Lua classes the first parameter passed to the `init()` function will be the entity itself (followed by the rest of the arguments) allowing it to be stored for later use.
+
+    Some special callback methods can be implemented in Lua classes to provide extra functionality.
+
+
+    The `update()` method will be called once per frame (useful for animations and game logic).
+    The `fixedUpdate()` method will be called once per physics update (useful for physics related behaviour).
+
+
+    If the component is successfully added, the component will be returned. Only one of a given component type can be added at a time.
+
+  group: Entities
+  id: entity.add
+  name: entity.add( type, ... )
+  parameters:
+  - description: type, the type of component to add to this entity
+    name: type
+  returns: object, the component added to this entity
+  related:
+  - craft.entity
+  syntax: |
+    myEntity:add( craft.renderer, myModel )
+    myEntity:add( craft.shape.box, vec3(1,1,1) )
+    myEntity:add( LuaClass, p1, p2, p3, ... )
+  examples:
+  - example: |
+      -- Lua classes can be attached to entities to customise behaviour
+      Mover = class()
+
+      function Mover:init(entity, speed)
+          self.entity = entity
+          self.speed = speed
+      end
+
+      function Mover:update()
+          -- Move the entity to the right at speed meters per second
+          self.entity.x = self.entity.x + self.speed * DeltaTime
+          self.entity.eulerAngles = vec3(0, ElapsedTime * 90, 270)
+      end
+
+      function setup()
+        -- Create a new craft scene
+        scene = craft.scene()
+
+          -- Create an entity and attach a Mover to make it move automatically
+          local entity = scene:entity()
+
+          entity.model = craft.model("SpaceKit:spaceCraft6")
+          entity.scale = vec3(0.1, 0.1, 0.1)
+          entity.x = -10
+
+          entity:add(Mover, 1.5)
+
+          scene.camera.z = 20
+          scene.camera.eulerAngles = vec3(0,0,180)
+      end
+
+      function update(dt)
+        scene:update(dt)
+      end
+
+      function draw()
+        update(DeltaTime)
+        scene:draw()
+      end
+#---------------------------------
+
+#---------------------------------
+# entity.get
+#---------------------------------
+- category: method
+  description: >
+    Gets a component of a particular type attached to this entity. If the component does not exist, nil is returned.
+
+  group: Entities
+  id: entity.get
+  name: entity.get( type )
+  parameters:
+  - description: type, the type of component to get from this entity
+    name: type
+  returns: object, the requested component (or nil if it does not exist)
+  related:
+  - craft.entity
+  - entity.add
+  - entity.remove
+  syntax: |
+    myEntity:get( craft.renderer )
+    myEntity:get( craft.shape.box )
+    myEntity:get( craft.rigidbody )
+    myEntity:get( LuaClass )
+#---------------------------------
+
+#---------------------------------
+# entity.remove
+#---------------------------------
+- category: method
+  description: >
+    Removes a component of a particular type attached to this entity, if it exists.
+
+  group: Entities
+  id: entity.remove
+  name: entity.remove( componentType )
+  parameters:
+  - description: type, the type of component to remove from this entity
+    name: type
+  related:
+  - craft.entity
+  - entity.add
+  - entity.remove
+  syntax: |
+    myEntity:remove( craft.renderer )
+    myEntity:remove( craft.shape.box )
+    myEntity:get( craft.rigidbody )
+    myEntity:remove( LuaClass )
+#---------------------------------
+
+#---------------------------------
+# entity.destroy
+#---------------------------------
+- category: method
+  description: Marks this entity for destruction in the next frame. Any children will also be marked for destruction.
+  group: Entities
+  id: entity.destroy
+  name: entity.destroy()
+  related:
+  - craft.entity
+  syntax: |
+    myEntity:destroy()
+#---------------------------------
+
+#---------------------------------
+# entity.transformPoint
+#---------------------------------
+- category: method
+  description: Transforms a point from local space into world space using this entity's transform.
+  group: Entities
+  id: entity.transformPoint
+  name: entity.transformPoint()
+  parameters:
+  - description: vec3, the point to transform
+    name: point
+  returns: vec3, the transformed point
+  related:
+  - craft.entity
+  syntax: |
+    myEntity:transformPoint(point)
+#---------------------------------
+
+#---------------------------------
+# entity.inverseTransformPoint
+#---------------------------------
+- category: method
+  description: Transforms a point from world space into local space using this entity's transform.
+  group: Entities
+  id: entity.inverseTransformPoint
+  name: entity.inverseTransformPoint()
+  parameters:
+  - description: vec3, the point to transform
+    name: point
+  returns: vec3, the transformed point
+  related:
+  - craft.entity
+  syntax: |
+    myEntity:inverseTransformPoint(point)
+#---------------------------------
+
+#---------------------------------
+# entity.transformDirection
+#---------------------------------
+- category: method
+  description: Transforms a direction from local space into world space using this entity's transform.
+  group: Entities
+  id: entity.transformDirection
+  name: entity.transformDirection()
+  parameters:
+  - description: vec3, the direction to transform
+    name: direction
+  returns: vec3, the transformed direction
+  related:
+  - craft.entity
+  syntax: |
+    myEntity:transformDirection(point)
+#---------------------------------
+
+#---------------------------------
+# entity.inverseTransformDirection
+#---------------------------------
+- category: method
+  description: Transforms a direction from world space into local space using this entity's transform.
+  group: Entities
+  id: entity.inverseTransformDirection
+  name: entity.inverseTransformDirection()
+  parameters:
+  - description: vec3, the direction to transform
+    name: direction
+  related:
+  - craft.entity
+  syntax: |
+    myEntity:inverseTransformDirection(direction)
+#---------------------------------
+
+
+#---------------------------------
+# craft.camera
+#---------------------------------
+- category: type
+  description: A component used to draw the scene from its point of view.
+  group: Rendering
+  id: craft.camera
+  name: craft.camera
+  parameters:
+  - description: float, the field of view of the camera in degrees
+    name: fieldOfView
+  - description: bool, orthographic rendering mode for this camera
+    name: ortho
+  - description: float, the near plane for the camera (the closest thing that can be rendered)
+    name: nearPlane
+  - description: float, the far plane for the camera (the farthest thing that can be rendered)
+    name: farPlane
+  - description: bool, the depth clearing flag for the camera (when set to true the existing depth buffer will be cleared before rendering)
+    name: clearDepthEnabled
+  - description: bool, the color clearing flag for the camera (when set to true the existing color buffer will be cleared before rendering)
+    name: clearColorEnabled
+  - description: color, the color to use when clearing the color buffer before rendering with the camera
+    name: clearColor
+  - description: entity, the entity that the camera is attached to
+    name: entity
+
+  syntax: |
+    myEntity:add(craft.camera, fov, nearPlane, farPlane, false)
+    myEntity:add(craft.camera, orthoSize, nearPlane, farPlane, true)
+  examples:
+  - example: |
+      -- create a new entity and add a camera to it
+      camera = scene:entity():add(craft.camera, 45, 0.1, 1000, false)
+  related:
+  - craft.entity
+#---------------------------------
+
+#---------------------------------
+# camera.screenToWorld
+#---------------------------------
+- category: method
+  description: Converts a position given in screen coordinates (x, y) and a depth value (z) to world space relative to this camera.
+  group: Rendering
+  id: camera.screenToWorld
+  name: camera.screenToWorld( position )
+  parameters:
+  - description: vec3, the position to convert to world space
+    name: position
+  related:
+  - craft.camera
+  syntax: |
+    myCamera:screenToWorld( position )
+  returns: vec3
+#---------------------------------
+
+#---------------------------------
+# camera.screenToRay
+#---------------------------------
+- category: method
+  description: Converts a position in screen coordinates (x, y) to a ray in the form of an origin and direction relative to this camera.
+  group: Rendering
+  id: camera.screenToRay
+  name: camera.screenToRay( position )
+  parameters:
+  - description: vec2, the position to generate a ray with
+    name: position
+  related:
+  - craft.camera
+  syntax: |
+    origin, dir = myCamera:screenToRay( position )
+  returns: vec3, vec3
+#---------------------------------
+
+#---------------------------------
+# camera.worldToScreen
+#---------------------------------
+- category: method
+  description: Converts a position given in world coordinates to screen coordinates relative to this camera.
+  group: Rendering
+  id: camera.worldToScreen
+  name: camera.worldToScreen( screenPos )
+  parameters:
+  - description: vec3, the position to convert to screen space
+    name: position
+  related:
+  - craft.camera
+  syntax: |
+    myCamera:worldToScreen( screenPos )
+  returns: vec2
+#---------------------------------
+
+#---------------------------------
+# camera.viewport
+#---------------------------------
+- category: method
+  description: >
+    Sets or gets the current viewport using normalized coordinates.
+    Can be used for adjusting the rendered area of the camera relative to the screen.
+    For instance, calling `camera:viewport(0.0, 0.0, 0.5, 1.0)` will render the camera to only the left half of the screen.
+
+  group: Rendering
+  id: camera.viewport
+  name: camera.viewport( x, y, width, height )
+  parameters:
+  - description: float, the x position of the viewport
+    name: x
+  - description: float, the y position of the viewport
+    name: y
+  - description: float, the width viewport
+    name: width
+  - description: float, height of the viewport
+    name: height
+
+  related:
+  - craft.camera
+  syntax: |
+    myCamera:viewport(x, y, width, height)
+    x, y, w, h = myCamera:viewport()
+  returns: x, y, w, h
+#---------------------------------
+
+
+#---------------------------------
+# craft.renderer
+#---------------------------------
+- category: type
+  description: >
+    A component used to draw a 3D model in the scene.
+    Renderers can be attached to entities by using `entity:add(craft.renderer)` or by setting `entity.model` and `entity.material` directly.
+  group: Rendering
+  id: craft.renderer
+  name: craft.renderer
+  parameters:
+  - description: material, the material to apply to this renderer
+    name: material
+  - description: model, the model to render
+    name: model
+  syntax: |
+    myEntity:add(craft.renderer, model)
+  examples:
+  - example: |
+      -- create a new entity
+      entity = scene.entity()
+      entity.model = craft.model.icosphere(1, 3, false)
+      entity.material = craft.material(asset.builtin.Materials.Standard)
+
+  related:
+  - craft.entity
+#---------------------------------
+
+
+#---------------------------------
+# craft.light
+#---------------------------------
+- category: type
+  description: >
+    A component that casts light onto the scene.
+    Different types of lights can be used to achieve different lighting effects, these include: `DIRECTIONAL`, `SPOT` and `POINT`.
+    The position and rotation of the entity controls the position and rotation of the attached light source.
+    By default the scene contains a single directional light known as the `sun`.
+
+
+    The scene also contains an ambient light controlled by `scene.ambientColor`.
+    The ambient light term is added to the emission of all other lights and is generally used for simulating scattered environmental light.
+  group: Rendering
+  id: craft.light
+  name: craft.light
+  parameters:
+  - description: the type of light, can be DIRECTIONAL, SPOT, POINT
+    name: type
+  - description: color, the color of the light
+    name: color
+  - description: float, how intense the emitted light is (can be higher than one)
+    name: intensity
+  - description: float, how far the light can travel (only applies for spot and point lights)
+    name: distance
+  - description: float, the spread angle of the light (only applies to spot lights)
+    name: angle
+  - description: float, the angle where light intensity begins to fade (only applies to spot lights)
+    name: penumbra
+  - description: float, the rate at which the intensity of the light fades due to distance (only applies to spot and point lights)
+    name: decay
+  - description: bitmask, the mask for which renderers should be effected by this light source
+    name: mask
+
+  syntax: |
+    myEntity:add(craft.light, DIRECTIONAL)
+    myEntity:add(craft.light, SPOT)
+    myEntity:add(craft.light, POINT)
+  examples:
+  - example: |
+      -- Create a new entity
+      entity = scene.entity()
+      light = entity:add(craft.light, POINT)
+      light.distance = 10
+      light.intensity = 1
+      light.color = color(255,128,128)
+      entity.position = vec3(0,5,0)
+
+  related:
+  - craft.entity
+  - craft.renderer
+  - craft.camera
+#---------------------------------
+
+
+#---------------------------------
+# DIRECTIONAL
+#---------------------------------
+- category: const
+  description: >
+    This constant specifies the directional light type.
+    Directional lights simulate an infinitely distant light source where all rays are parallel (similar to the sun).
+    The position of a directional light is ignored.
+  group: Rendering
+  id: DIRECTIONAL
+  name: DIRECTIONAL
+  related:
+  - craft.light
+  returns: int
+  syntax: DIRECTIONAL
+#---------------------------------
+
+#---------------------------------
+# SPOT
+#---------------------------------
+- category: const
+  description: >
+    This constant specifies the spot light type.
+    Spotlights simulate a cone of light within a specified angle (see the `angle` property).
+    The `distance` and `decay` properties define how far the light travels and how quickly the intensity falls off over distance.
+
+
+    The `penumbra` property defines how hard the edge of the spotlight is.
+    The closer this value is to `angle` the harder the edge will appear.
+    Setting this to zero will give the appearance of very soft spotlight.
+  group: Rendering
+  id: SPOT
+  name: SPOT
+  related:
+  - craft.light
+  returns: int
+  syntax: SPOT
+#---------------------------------
+
+
+#---------------------------------
+# POINT
+#---------------------------------
+- category: const
+  description: >
+    This constant specifies the point light type.
+    Point lights simulate a omnidirectional light source emitting from a single point.
+    The `distance` and `decay` properties define how far the light travels and how quickly the intensity falls off over distance.
+  group: Rendering
+  id: POINT
+  name: POINT
+  related:
+  - craft.light
+  returns: int
+  syntax: POINT
+#---------------------------------
+
+
+#---------------------------------
+# craft.material
+#---------------------------------
+- category: type
+  description: >
+    This type represents a surface material. Materials are used to control the physical appearance of 3D objects, such as models, sky boxes and voxels.
+
+
+    Set the material property on a `craft.renderer` component to apply a given material to it.
+    Materials are built out of modular shaders with a set of dynamic properties.
+
+
+    Each named property has a different effect on the material's appearance.
+    For instance, the `map` property can be set with an image or asset string to change the surface appearance of the `Standard` material.
+    Other properties can change the normals, roughness, metalness and reflectiveness of materials.
+  examples:
+  - example: |
+
+      local e = scene:entity()
+      e.model = craft.cube(vec3(1,1,1))
+
+      -- Load the standard material (physically based rendering)
+      local m = craft.material(asset.builtin.Materials.Standard)
+      e.material = m
+
+      -- Surface color
+      m.diffuse = color(255, 255, 255)
+      -- Opacity (0.0 fully transparent, 1.0 fully opaque)
+      m.opacity = 1.0
+      -- Surface color texture map
+      m.map = "Surfaces:Basic Bricks Color"
+      -- Texture map offset and repeat (tiling)
+      m.offsetRepeat = vec4(0.0, 0.0, 3.0, 3.0)
+      -- Normal map for small scale surface details
+      m.normalMap = "Surfaces:Basic Bricks Normal"
+      -- How intense the normal map effect is in tangent space (also used for flipping)
+      m.normalScale = vec2(1, 1)
+      -- How rough the material is
+      m.roughness = 1.0
+      -- A texture that controls the roughness
+      m.roughnessMap = "Surfaces:Basic Bricks Roughness"
+      -- How metallic the material is
+      m.metalness = 1.0
+      -- A texture that controls how metallic the surface is
+      m.metalnessMap = nil
+      -- The environment map (a CubeTexture), specular illumination
+      m.envMap = nil
+      -- The ambient occlusion map, used for self-occluding shadows
+      m.aoMap = "Surfaces:Basic Bricks AO"
+      -- How intense the aoMap is
+      m.aoMapIntensity = 2.5
+      -- The displacement map which modifies vertex positions based on normals
+      m.displacementMap = nil
+      -- Base offset of the displacement map
+      m.displacementBias = 0
+      -- Scale of the displacement map
+      m.displacementScale = 1
+
+  group: Rendering
+  id: craft.material
+  name: craft.material
+  parameters:
+  - description: int, the blend mode to use for this material (can be NORMAL, ADDITIVE or MULTIPLY)
+    name: blendMode
+  - description: int, the render queue to use for this material (can be OPAQUE or TRANSPARENT)
+    name: renderQueue
+
+  syntax: |
+    myMaterial = craft.material(asset.builtin.Materials.Basic)
+    myMaterial = craft.material(asset.builtin.Materials.Standard)
+    myMaterial = craft.material(asset.builtin.Materials.Specular)
+    myMaterial = craft.material(asset.builtin.Materials.Skybox)
+
+  related:
+  - craft.entity
+  - craft.renderer
+  - craft.model
+
+#---------------------------------
+
+#---------------------------------
+# craft.model
+#---------------------------------
+- category: type
+  description: >
+    This type represents a model. Used in conjunction with a `craft.renderer` component to draw 3D objects.
+
+
+    Existing model assets can be loaded by using `craft.model(asset)`, supported 3D model formats
+    are `.obj`, `.fbx`, `.stl` and `.blend`.
+
+
+    Models are made up of a number of triangles, which are in-turn made up of vertices. Each vertex has a
+    number of attributes that control their appearance, such as `position`, `color` and `normal`.
+
+
+    To make a triangle you must set the indices of the model using the `indices` property.
+    You can resize the number of indices and vertices by using the `resizeIndices()` and `resizeVertices()` functions.
+
+  examples:
+  - example: |
+      -- Create a blank model
+      m = craft.model()
+
+      -- Blank models include attributes for position, normal, color and uv
+      local positions = {vec3(-1.0,-1.0,0), vec3(-1.0,1.0,0), vec3(1.0,1.0,0), vec3(1.0,-1.0,0)}
+      local normals = {vec3(0,0,-1), vec3(0,0,-1), vec3(0,0,-1), vec3(0,0,-1)}
+      local uvs = {vec2(0,0), vec2(0,1), vec2(1,1), vec2(1,0)}
+      local c = color(245, 3, 3, 255)
+      local colors = {c, c, c, c}
+
+      -- Indices are used to create triangles using groups of 3 vertices
+      local indices = {3,2,1,4,3,1}
+
+      -- Update model vertices using tables
+      m.positions = positions
+      m.normals = normals
+      m.uvs = uvs
+      m.colors = colors
+      m.indices = indices
+
+
+  group: Rendering
+  id: craft.model
+  name: craft.model
+  parameters:
+  - description: int, the number of vertices in this model
+    name: vertexCount
+  - description: int, the number of indices in this model
+    name: indexCount
+  - description: array, the positions of the vertices of this model
+    name: positions
+  - description: array, the normals of the vertices of this model
+    name: normals
+  - description: array, the colors of the vertices of this model
+    name: colors
+  - description: array, the uvs of the vertices of this model
+    name: uvs
+  - description: array, the primitive indices of this model used to form triangles
+    name: indices
+  - description: material, the material for this model (overridden by renderer materials)
+    name: material
+
+  syntax: |
+    myModel = craft.model()
+    myModel = craft.model( asset )
+  related:
+  - craft.renderer
+  - craft.material
+#---------------------------------
+
+#---------------------------------
+# craft.model.cube
+#---------------------------------
+- id: craft.model.cube
+  category: function
+  description: >
+    Creates a cube model with the specified size and offset.
+
+    By default the size parameter is set to (1,1,1), and the offset parameter is (0,0,0).
+
+  group: Rendering
+  name: craft.model.cube
+  parameters:
+  - description: vec3, the size of the cube
+    name: size
+  - description: vec3, the offset of the center of the cube
+    name: offset
+  syntax: |
+    myModel = craft.model.cube()
+    myModel = craft.model.cube(size)
+    myModel = craft.model.cube(size, offset)
+#---------------------------------
+
+#---------------------------------
+# craft.model.icosphere
+#---------------------------------
+- id: craft.model.icosphere
+  category: function
+  description: >
+    Creates an icosphere model. An icosphere is a geodesic dome made from equally sized triangles.
+    The number of subdivisions specified will control how dense the sphere is (increasing the number of triangles).
+    Setting the icosphere to flat will created faceted faces, otherwise the icosphere will have a smooth appearance.
+
+  group: Rendering
+  name: craft.model.icosphere
+  parameters:
+  - description: float, the radius of the icosphere
+    name: radius
+  - description: int, the number of subdivisions to apply the base icosphere
+    name: subdivisions
+  syntax: |
+    myModel = craft.model.icosphere(radius)
+    myModel = craft.model.icosphere(radius, subdivisions)
+    myModel = craft.model.icosphere(radius, subdivisions, flat)
+#---------------------------------
+
+
+#---------------------------------
+# craft.model.plane
+#---------------------------------
+- id: craft.model.plane
+  category: function
+  description: >
+    Creates a horizontal plane model with the specified size and offset.
+
+    By default the size parameter is set to (1, 1), and the offset parameter is (0, 0, 0).
+
+  group: Rendering
+  name: craft.model.plane
+  parameters:
+  - description: vec2, the size of the plane (x, z dimensions)
+    name: size
+  - description: vec3, the offset of the center of the plane
+    name: offset
+  syntax: |
+    myModel = craft.model.plane()
+    myModel = craft.model.plane(size)
+    myModel = craft.model.plane(size, offset)
+#---------------------------------
+
+
+#---------------------------------
+# model.resizeVertices
+#---------------------------------
+- category: method
+  description: Sets the number of vertices in the model.
+  group: Rendering
+  id: model.resizeVertices
+  name: model.resizeVertices( size )
+  parameters:
+  - description: int, the number of vertices
+    name: size
+  related:
+  - craft.model
+  - model.resizeIndices
+  syntax: |
+    myModel:resizeVertices( size )
+#---------------------------------
+
+#---------------------------------
+# model.resizeIndices
+#---------------------------------
+- category: method
+  description: Sets the number of indices in the model where each set of 3 indices forms a triangle.
+  group: Rendering
+  id: model.resizeIndices
+  name: model.resizeIndices( size )
+  parameters:
+  - description: int, the number of indices
+    name: size
+  related:
+  - craft.model
+  - model.resizeVertices
+  syntax: |
+    myModel:resizeIndices( size )
+#---------------------------------
+
+#---------------------------------
+# model.position
+#---------------------------------
+- category: method
+  description: >
+    Set or get the position for a vertex within this model.
+
+
+    Use with only the `index` parameter to return the x, y, z values of a vertex position (as 3 separate values).
+  group: Rendering
+  id: model.position
+  name: model.position( index, ... )
+  parameters:
+  - description: int,
+    name: index
+  related:
+  - craft.model
+  - model.resizeVertices
+  syntax: |
+    myModel:position( index )
+    myModel:position( index, p )
+    myModel:position( index, x, y, z )
+#---------------------------------
+
+#---------------------------------
+# model.normal
+#---------------------------------
+- category: method
+  description: >
+    Set or get the normal for a vertex within this model.
+
+
+    Use with only the `index` parameter to return the x, y, z values of a vertex normal (as 3 separate values).
+  group: Rendering
+  id: model.normal
+  name: model.normal( index, ... )
+  parameters:
+  - description: int,
+    name: index
+  related:
+  - craft.model
+  - model.resizeVertices
+  - model.position
+  syntax: |
+    x, y, z = myModel:normal( index )
+    myModel:normal( index, n )
+    myModel:normal( index, x, y, z )
+#---------------------------------
+
+#---------------------------------
+# model.color
+#---------------------------------
+- category: method
+  description: >
+    Set or get the color for a vertex within this model.
+
+
+    Use with only the `index` parameter to return the r, g, b, a values of a vertex color (as 4 separate values).
+  group: Rendering
+  id: model.color
+  name: model.color( index, ... )
+  parameters:
+  - description: int,
+    name: index
+  related:
+  - craft.model
+  - model.resizeVertices
+  - model.position
+  - model.normal
+  - model.uv
+  syntax: |
+    r, g, b, a = myModel:color( index )
+    myModel:color( index, c )
+    myModel:color( index, r, g, b, a )
+#---------------------------------
+
+#---------------------------------
+# model.uv
+#---------------------------------
+- category: method
+  description: >
+    Set or get the uv for a vertex within this model.
+
+
+    Use with only the `index` parameter to return the u, v values of a vertex uv (as 2 separate values).
+  group: Rendering
+  id: model.uv
+  name: model.uv( index, ... )
+  parameters:
+  - description: int, index of the vertex to access
+    name: index
+  related:
+  - craft.model
+  - model.resizeVertices
+  - model.position
+  - model.normal
+  - model.color
+  syntax: |
+    u, v = myModel:uv( index )
+    myModel:uv( index, p )
+    myModel:uv( index, u, v )
+#---------------------------------
+
+#---------------------------------
+# model.submeshCount
+#---------------------------------
+- category: property
+  description: >
+    This returns the number of submeshes available in the model. It can be used to find the range of indices needed for the `getMaterial` and `setMaterial` methods
+    
+    
+    Note that submeshes are indexed from 1 to `submeshCount`
+  group: Rendering
+  id: model.submeshCount
+  name: model.submeshCount
+  related:
+  - craft.model
+  - craft.material
+  - model.setMaterial
+  - model.getMaterial
+  syntax: |
+    myModel.submeshCount
+#---------------------------------
+
+#---------------------------------
+# model.getMaterial
+#---------------------------------
+- category: method
+  description: >
+    Get the material for a submesh within this model. You can use the `submeshCount` property of the model to get the number of submeshes with distinct materials
+    
+    
+    Note that submeshes are indexed from 1 to `submeshCount`. If an index is not provided it defaults to 1
+  group: Rendering
+  id: model.getMaterial
+  name: model.getMaterial( index )
+  parameters:
+  - description: int, index of the submesh to access, starting at 1
+    name: index
+  related:
+  - craft.model
+  - craft.material
+  - model.setMaterial
+  syntax: |
+    mat = myModel:getMaterial()
+    mat = myModel:getMaterial( index )
+#---------------------------------
+
+#---------------------------------
+# model.setMaterial
+#---------------------------------
+- category: method
+  description: >
+    Set the material for a submesh within this model. You can use the `submeshCount` property of the model to get the number of submeshes with distinct materials
+    
+    
+    Note that submeshes are indexed from 1 to `submeshCount`. If an index is not provided it defaults to 1
+  group: Rendering
+  id: model.setMaterial
+  name: model.setMaterial( material, index )
+  parameters:
+  - description: Craft material to apply to the submesh at this index
+    name: material
+  - description: int, index of the submesh to access, starting at 1
+    name: index
+  related:
+  - craft.model
+  - craft.material
+  - model.getMaterial
+  syntax: |
+    myModel:setMaterial( material )
+    myModel:setMaterial( material, index )
+#---------------------------------
+
+#---------------------------------
+# model.addElement
+#---------------------------------
+- category: method
+  description: >
+    Adds a variable number of indices to the model. Each index must be within the range `1..model.vertexCount`
+
+  group: Rendering
+  id: model.addElement
+  name: model.addElement( index )
+  parameters:
+  - description: int,
+    name: index
+  related:
+  - craft.model
+  - model.resizeVertices
+  - model.position
+  - model.normal
+  - model.color
+  - model.indices
+  syntax: |
+    myModel:addElement( index1, index2, ..., indexN )
+#---------------------------------
+
+#---------------------------------
+# model.clear
+#---------------------------------
+- category: method
+  description: >
+    Clears all buffers in all submeshes associated with this model. Effectively removing all its geometry
+    
+    
+    This is useful for re-using a model object multiple times
+  group: Rendering
+  id: model.clear
+  name: model.clear
+  related:
+  - craft.model
+  syntax: |
+    myModel:clear()
+#---------------------------------
+
+#---------------------------------
+# model.split
+#---------------------------------
+- category: method
+  description: >
+    This function modifies the model geometry to ensure that each triangle has unique vertices. So that no triangle shares vertex indexes with its neighbours. Calling this will increase the number of vertices in the model (if it is not already split)
+    
+    
+    The index parameter (defaults to 1) allows you to specify which submesh is split. If a model has multiple submeshes you will need to call `split` multiple times, one for each submesh up to `submeshCount`
+  group: Rendering
+  parameters:
+  - description: int, index of the submesh to access, starting at 1
+    name: index
+  id: model.split
+  name: model.split( index )
+  related:
+  - craft.model
+  syntax: |
+    myModel:split()
+    myModel:split( index )
+#---------------------------------
+
+#---------------------------------
+# craft.physics
+#---------------------------------
+- category: type
+  description: The system governing all 3D physics in a scene.
+  group: Physics
+  id: craft.physics
+  name: craft.physics
+  parameters:
+  - description: bool, use to pause and unpause the physics simulation
+    name: paused
+  - description: vec3, the current force of gravity effecting all rigidbodies (measured in ms^2)
+    name: gravity
+#---------------------------------
+
+#---------------------------------
+# craft.physics.raycast
+#---------------------------------
+- id: physics.raycast
+  category: function
+  description: >
+    Performs a raycast in the scene against any rigidbodies with attached shapes.
+
+  group: Physics
+  name: physics.raycast
+  parameters:
+  - description: vec3, the origin of the ray
+    name: origin
+  - description: vec3, the direction of the ray
+    name: direction
+  - description: float, the maximum distance the ray can travel
+    name: distance
+  - description: int, the group of the ray (used for filtering)
+    name: group
+  - description: int, the mask of the ray (used for filtering)
+    name: mask
+  syntax: |
+    scene.physics:raycast(origin, direction, distance)
+    scene.physics:raycast(origin, direction, distance, group)
+    scene.physics:raycast(origin, direction, distance, group, mask)
+  returns: |
+    table, if the raycast intersects a rigidbody this function will return a table containing the following key-value pairs:
+
+        entity => entity hit
+        point => point of intersection
+        normal => normal at the point of intersection
+        fraction => fraction of total ray length from start to intersecton point
+        uv => the uv coordinates of the hit location (if the target has an attached model shape)
+        barycentric => the barycentric coordinates of triangle hit location (if the target has an attached model shape)
+        triangleIndex => the index of the triangle hit (if the target has an attached model shape)
+
+#---------------------------------
+
+#---------------------------------
+# craft.physics.spherecast
+#---------------------------------
+- id: physics.spherecast
+  category: function
+  description: >
+    Performs a spherecast in the scene against any rigidbodies with attached shapes.
+    A spherecast works by projecting a sphere in the direction of the cast and detecting any shapes that it intersects.
+
+  group: Physics
+  name: physics.spherecast
+  parameters:
+  - description: vec3, the origin of the spherecast
+    name: origin
+  - description: vec3, the direction of the spherecast
+    name: direction
+  - description: float, the maximum distance the spherecast can travel
+    name: distance
+  - description: float, the radius of the spherecast
+    name: radius
+  - description: bitmask, the group of the ray (used for filtering)
+    name: group
+  - description: bitmask, the mask of the ray (used for filtering)
+    name: mask
+  syntax: |
+    scene.physics:spherecast(origin, direction, distance, radius)
+    scene.physics:spherecast(origin, direction, distance, radius, group)
+    scene.physics:spherecast(origin, direction, distance, radius, group, mask)
+  returns: |
+    table, if the spherecast intersects a rigidbody this function will return a table containing the following key-value pairs:
+
+        entity => entity hit
+        point => point of intersection
+        normal => normal at the point of intersection
+        fraction => fraction of total ray length from start to intersecton point
+#---------------------------------
+
+#---------------------------------
+# craft.rigidbody
+#---------------------------------
+- category: type
+  description: >
+    This type represents a 3D rigidbody. Attach this to an entity to make it respond to forces and collisions.
+    When creating a rigidbody you must specify the type you want to create.
+    Refer to the documentation for `DYNAMIC`, `STATIC` and `KINEMATIC` for more details.
+
+  examples:
+  - example: |
+      -- create a sphere with a 1 meter radius
+      sphere = scene:entity()
+
+      -- Attach a dynamic rigidbody
+      sphere:add(craft.rigidbody, DYNAMIC, 1)
+
+      -- Add a sphere shape to respond to collisions
+      sphere:add(craft.shape.sphere, 1)
+
+      -- Attach a renderer and sphere model for visuals
+      sphere.model = craft.model.icosphere(1, 3)
+      sphere.material = craft.material(asset.builtin.Materials.Standard)
+
+  group: Physics
+  id: craft.rigidbody
+  name: craft.rigidbody
+  parameters:
+  - description: the type of the body, can be STATIC, DYNAMIC or KINEMATIC
+    name: type
+  - description: float, the mass of the rigid body in kilograms
+    name: mass
+  - description: vec3, the center of mass of the rigid body in world space
+    name: centerOfMass
+  - description: vec3, the current linear velocity of the body in meters per second
+    name: linearVelocity
+  - description: vec3, the angular velocity of the body in degrees per second
+    name: angularVelocity
+  - description: bool, is the rigid body currently awake
+    name: awake
+  - description: bool, is sleeping allowed for this rigid body
+    name: sleepingAllowed
+  - description: float, linear damping factor, slows rigid body movement over time
+    name: linearDamping
+  - description: float, angular damping factor, slows rigid body rotation over time
+    name: angularDamping
+  - description: float, sliding friction factor
+    name: friction
+  - description: float, rolling friction factor
+    name: rollingFriction
+  - description: float, restitution factor, the bounceyness of this rigid body
+    name: restitution
+  - description: bitmask, the collision filtering group for this rigid body
+    name: group
+  - description: bitmask, the collision filtering mask for this rigid body
+    name: mask
+
+  syntax: |
+    myRigidbody = myEntity:add( craft.rigidbody, STATIC )
+    myRigidbody = myEntity:add( craft.rigidbody, KINEMATIC )
+    myRigidbody = myEntity:add( craft.rigidbody, DYNAMIC, mass )
+
+  related:
+  - DYNAMIC
+  - STATIC
+  - KINEMATIC
+
+#---------------------------------
+
+#---------------------------------
+# DYNAMIC
+#---------------------------------
+- category: const
+  description: >
+    This constant specifies the dynamic body type. Dynamic bodies move under the influence of collisions, forces, joints and gravity.
+  group: Physics
+  id: DYNAMIC
+  name: DYNAMIC
+  related:
+  - craft.rigidbody
+  returns: int
+  syntax: DYNAMIC
+#---------------------------------
+
+#---------------------------------
+# STATIC
+#---------------------------------
+- category: const
+  description: This constant specifies the static body type. Static bodies
+    are unaffected by forces and collisions. They also do not collide with other
+    static or kinematic bodies.Also note that you cannot attach two static/kinematic
+    bodies together with a joint.
+  group: Physics
+  id: STATIC
+  name: STATIC
+  related:
+  - craft.rigidbody
+  returns: int
+  syntax: STATIC
+#---------------------------------
+
+#---------------------------------
+# KINEMATIC
+#---------------------------------
+- category: const
+  description: This constant specifies the kinematic body type. Kinematic
+    bodies are unaffected by forces and collisions. Unlike static bodies, kinematic
+    bodies are meant to be moved, usually by setting linear velocity directly. They
+    also do not collide with other static or kinematic bodies. Also note that
+    you cannot attach two static/kinematic bodies together with a joint.
+  group: Physics
+  id: KINEMATIC
+  name: KINEMATIC
+  related:
+  - craft.rigidbody
+  returns: int
+  syntax: KINEMATIC
+#---------------------------------
+
+#---------------------------------
+# rigidbody.applyForce
+#---------------------------------
+- category: method
+  description: Applies a force to this rigidbody. If `worldPoint` is not specified then the force will be applied to the center of the rigidbody.
+  group: Physics
+  id: rigidbody.applyForce
+  name: rigidbody.applyForce( force )
+  parameters:
+  - description: vec3, the amount of force (in newtons per second) to apply as a vector
+    name: force
+  - description: vec3, the point to apply the force from, in world coordinates
+    name: worldPoint
+  related:
+  - craft.rigidbody
+  - rigidbody.applyTorque
+  syntax: |
+    myBody:applyForce( force )
+    myBody:applyForce( force, worldPoint )
+#---------------------------------
+
+#---------------------------------
+# rigidbody.applyTorque
+#---------------------------------
+- category: method
+  description: Applies torque to this rigidbody.
+  group: Physics
+  id: rigidbody.applyTorque
+  name: rigidbody.applyTorque( torque )
+  parameters:
+  - description: vec3, the amount of torque (in newton meters per second) to apply as a vector
+    name: force
+  related:
+  - craft.rigidbody
+  - rigidbody.applyForce
+  syntax: |
+    myBody:applyTorque( torque )
+
+#---------------------------------
+
+#---------------------------------
+# craft.shape.box
+#---------------------------------
+- category: type
+  description: This component represents a box physics shape. Attach this to an entity with a rigidbody to make it respond to physical forces.
+  group: Physics
+  id: craft.shape.box
+  name: craft.shape.box
+
+  parameters:
+  - description: vec3, the size of the box
+    name: size
+  - description: vec3, the offset of the box (center)
+    name: offset
+  examples:
+  - example: |
+      -- create a new entity
+      e = scene:entity()
+      e:add(craft.rigidbody, DYNAMIC, 1)
+      e:add(craft.shape.box, vec3(1,1,1), vec3(0,0,0))
+  syntax: |
+    myShape = myEntity:add(craft.shape.box, size)
+    myShape = myEntity:add(craft.shape.box, size, offset)
+  related:
+  - Rigidbody
+#---------------------------------
+
+#---------------------------------
+# craft.shape.sphere
+#---------------------------------
+- category: type
+  description: This component represents a sphere physics shape. Attach this to an entity with a rigidbody to make it respond to physical forces.
+  examples:
+  - example: |
+      -- create a new entity
+      e = scene:entity()
+      e:add(craft.rigidbody, DYNAMIC, 1)
+      e:add(craft.shape.sphere, 1, vec3(0,0,0))
+
+  group: Physics
+  id: craft.shape.sphere
+  name: craft.shape.sphere
+  syntax: |
+    myShape = myEntity:add(craft.shape.sphere, radius)
+    myShape = myEntity:add(craft.shape.sphere, radius, offset)
+  related:
+  - craft.rigidbody
+#---------------------------------
+
+#---------------------------------
+# craft.shape.model
+#---------------------------------
+- category: type
+  description: This component represents an arbitrary physics shape made from a model. Attach this to an entity with a rigidbody to make it respond to physical forces.
+  examples:
+  - example: |
+      -- create a new entity
+      local model = craft.model("CastleKit:wallNarrowStairsFence")
+
+      e = scene:entity()
+      e.model = model
+      e:add(craft.rigidbody, STATIC)
+      e:add(craft.shape.model, model)
+
+  group: Physics
+  id: craft.shape.model
+  name: craft.shape.model
+  syntax: |
+    myShape = myEntity:add(craft.shape.model, model)
+  related:
+  - craft.rigidbody
+#---------------------------------
+
+
+#---------------------------------
+# craft.shape.capsule
+#---------------------------------
+- category: type
+  description: This component represents a capsule physics shape. Attach this to an entity with a rigidbody to make it respond to physical forces.
+  examples:
+  - example: |
+      -- create a new entity
+      e = scene:entity()
+      e:add(craft.rigidbody, DYNAMIC, 1)
+      e:add(craft.shape.capsule, 1, vec3(0,0,0))
+
+  group: Physics
+  id: craft.shape.capsule
+  name: craft.shape.capsule
+  syntax: |
+    myShape = myEntity:add(craft.shape.capsule, radius, height)
+  related:
+  - craft.rigidbody
+#---------------------------------
+
+
+#---------------------------------
+# craft.shape.cone
+#---------------------------------
+# TODO:
+#---------------------------------
+
+
+#---------------------------------
+# craft.shape.cylinder
+#---------------------------------
+# TODO:
+#---------------------------------
+
+
+#---------------------------------
+# craft.shape.hull
+#---------------------------------
+# TODO:
+#---------------------------------
+
+
+#---------------------------------
+# craft.joint.hinge
+#---------------------------------
+# TODO:
+#---------------------------------
+
+
+#---------------------------------
+# craft.joint.ball
+#---------------------------------
+# TODO:
+#---------------------------------
+
+
+#---------------------------------
+# craft.joint.fixed
+#---------------------------------
+# TODO:
+#---------------------------------
+
+#---------------------------------
+# craft.joint.generic
+#---------------------------------
+# TODO:
+#---------------------------------
+
+#---------------------------------
+# craft.joint.ragdoll
+#---------------------------------
+# TODO:
+#---------------------------------
+
+#---------------------------------
+# craft.joint.prismatic
+#---------------------------------
+# TODO:
+#---------------------------------
+
+#---------------------------------
+# craft.voxels
+#---------------------------------
+- category: type
+  description: >
+    The voxel system, used to manage streaming voxel terrain.
+
+    Initially no voxels exist as the terrain is completely empty. Using `voxels:resize()` will create an empty patch of terrain, consisting of empty blocks.
+
+    Once some terrain has been allocated `voxels:generate()` can be used to generate the landscape one chunk at a time via a multi-threaded generation system.
+    See the `Voxel Terrain` project for an example of how this works.
+
+    Using `voxels:enableStorage(storage)` allows voxels to be saved to a project subfolder with the specified name.
+    As a technical note, volumes and chunks are saved as zlib compressed json files. Block types, scheduled updates and block entities are all saved.
+    If a block id changes due to inserting a new block type of removing an existing one, the loaded chunk/volume may change unexpectedly.
+
+  parameters:
+  - description: vec3, the viewing coordinates to stream voxels around (in world coordinates)
+    name: coordinates
+  - description: float, the radius (in chunks) to stream around the viewing coordinates
+    name: visibleRadius
+  - description: int, the number of chunks that are loaded and potentially visible in the scene
+    name: visibleChunks
+  - description: int, the number of chunks that are currently being generated
+    name: generatingChunks
+  - description: int, the number of chunks that are currently being meshed (turned into models)
+    name: meshingChunks
+
+  examples:
+  - example: |
+      -- Set the size of the voxel landscape to 10x1x10 chunks
+      -- Each chunk is 16x128x16 blocks in size by default
+      scene.voxels:resize(vec3(10,1,10))
+      scene.voxels:generate(readProjectTab("Generate"), "generateTerrain")
+
+  group: Voxels
+  id: craft.voxels
+  name: craft.voxels
+  syntax: |
+    craft.voxels
+  related:
+  - craft.volume
+#---------------------------------
+
+
+#---------------------------------
+# craft.voxels.resize
+#---------------------------------
+- category: method
+
+  description: >
+    Resizes the voxel terrain to a specified size divided into chunks, which can be generated and streamed efficiently.
+
+  group: Voxels
+  id: craft.voxels.resize
+  name: voxels.resize( sizeInChunks, chunkSize )
+  parameters:
+  - description: vec3, the total size of the world in chunks (y is limited to 1 at this time)
+    name: sizeInChunks
+  - description: vec3, the size of each chunk (default is 16x128x16)
+    name: chunkSize
+  related:
+  - craft.voxels
+
+  syntax: |
+    scene.voxels:resize( vec3(100, 1, 100) )
+    scene.voxels:resize( vec3(100, 1, 100), vec3(16, 128, 16) )
+#---------------------------------
+
+
+#---------------------------------
+# craft.voxels.generate
+#---------------------------------
+- category: method
+
+  description: >
+    Triggers voxel terrain generation using lua code provided as a string and the number of a function to call.
+
+    The specified function must exist within `generationCode` and must take a single parameter which is the chunk that
+    will be generated. See `craft.volume` for available methods for manipulating chunks.
+
+  group: Voxels
+  id: craft.voxels.generate
+  name: voxels.generate( generationCode, generationFunction )
+  parameters:
+  - description: string, the lua code to use for multi-threaded generation
+    name: generationCode
+  - description: string, the name of the function within `generationCode` to use
+    name: generationFunction
+  related:
+  - craft.voxels
+
+  syntax: |
+    scene.voxels:generate(generationCode, generationFunction)
+
+#---------------------------------
+
+
+#---------------------------------
+# craft.voxels.get
+#---------------------------------
+- category: method
+  description: >
+    Gets data from a block at a particular location using the specified key(s). There are a number that can be used for different block data:
+
+
+    `BLOCK_ID` - Get this block's id (int)
+
+    `BLOCK_NAME` - Get this block's name (string)
+
+    `BLOCK_STATE` - Get this block's state (int)
+
+    `COLOR` - Get this block's tint color (color), only works for tinted blocks
+
+    To get custom block properties, use a string with the name of that property.
+    When called with no keys specified a block instance will be returned which has methods which can be called directly.
+
+  group: Voxels
+  id: craft.voxels.get
+  name: voxels.get( coord, key )
+  parameters:
+  - description: vec3 or (x,y,z), the coordinate of the block (in world coordinates) to get the data from
+    name: coord
+  - description: the key of the data to get for this block
+    name: key
+  related:
+  - craft.scene
+  returns: multiple, the values associated with the block's keys (or nil if it does not exist)
+  syntax: |
+    scene.voxels:get ( key )
+    scene.voxels:get ( key1, key2, ... keyN )
+    scene.voxels:get ( keyArray )
+#---------------------------------
+
+
+#---------------------------------
+# craft.voxels.set
+#---------------------------------
+- category: method
+  description: >
+    Sets data on a block at a particular location for the specified key(s). There are several that can be used for different block data:
+
+
+    `BLOCK_ID` - Set this blocks id (int), effectively changing the type of block
+
+    `BLOCK_NAME` - Set this blocks name (string), effectively changing the type of block
+
+    `BLOCK_STATE` - Set this blocks state (int)
+
+    `COLOR` - Set this blocks tint color (color), only works for tinted blocks
+
+
+    If a block changes its own type then it will behave as the new block and will trigger any `destroyed()` and `created()` callbacks.
+
+
+    To modify custom block properties, use a string with the name of that property.
+
+  group: Voxels
+  id: craft.voxels.set
+  name: voxels.set( coord, key, value )
+  parameters:
+  - description: vec3 or (x,y,z), the coordinate of the block (in world coordinates) to set the data for
+    name: coord
+  - description: the key of the data to set for this block
+    name: key
+  - description: the value to set the data to
+    name: value
+  related:
+  - craft.block
+  syntax: |
+    scene.voxels:set ( key, value )
+    scene.voxels:set ( key1, value1, ... keyN, valueN )
+    scene.voxels:set ( keyValueTable )
+#---------------------------------
+
+
+#---------------------------------
+# craft.voxels.fill
+#---------------------------------
+- category: method
+  description: >
+    Sets the current fill block. Takes the same parameters as `voxels.set`.
+
+    This is used for basic drawing operations such as `sphere`, `box` and `line`.
+
+  group: Voxels
+  id: craft.voxels.fill
+  name: voxels.fill( key, value )
+  parameters:
+  - description: the key of the data to use for the fill
+    name: key
+  - description: the value of the data to use for the fill
+    name: value
+
+  related:
+  - craft.scene
+  syntax: |
+    scene.voxels:fill ( key )
+    scene.voxels:fill ( key1, key2, ... keyN )
+    scene.voxels:fill ( keyArray )
+#---------------------------------
+
+#---------------------------------
+# craft.voxels.fillStyle
+#---------------------------------
+- category: method
+  description: >
+    Sets the current fill style. There are several styles that can be used:
+
+
+    `REPLACE` - Replace fill style, new blocks will replace any existing ones
+
+    `UNION` - Union fill style, new blocks will only replace empty ones
+
+    `UNTERSECT` - Intersect style, new blocks will only replace non-existing ones
+
+    `CLEAR` - Clear style, new blocks will clear any existing blocks
+
+  group: Voxels
+  id: craft.voxels.fillStyle
+  name: voxels.fillStyle( style )
+  parameters:
+  - description: the style to use
+    name: style
+
+  related:
+  - craft.scene
+  syntax: |
+    scene.voxels:fillStyle ( style )
+#---------------------------------
+
+
+#---------------------------------
+# craft.voxels.block
+#---------------------------------
+- category: method
+  description: >
+    Sets a single block using the current `fill()` and `fillStyle()` settings.
+
+  group: Voxels
+  id: craft.voxels.block
+  name: voxels.block( coord )
+  parameters:
+  - description: vec3 or (x,y,z), the coordinate to place the block
+    name: coord
+  related:
+  - craft.block
+  syntax: |
+    scene.voxels:block ( coord )
+#---------------------------------
+
+
+#---------------------------------
+# craft.voxels.sphere
+#---------------------------------
+- category: method
+  description: >
+    Sets a sphere shaped array of blocks using the `coord` and `radius`
+
+  group: Voxels
+  id: craft.voxels.sphere
+  name: voxels.sphere( coord, radius )
+  parameters:
+  - description: vec3 or (x,y,z), the coordinate of the sphere to place
+    name: coord
+  - description: float, the radius of the sphere to place
+    name: radius
+  related:
+  - craft.block
+  syntax: |
+    scene.voxels:sphere ( coord, radius )
+    scene.voxels:sphere ( x, y, z, radius )
+#---------------------------------
+
+
+#---------------------------------
+# craft.voxels.box
+#---------------------------------
+- category: method
+  description: >
+    Sets a box shaped array of blocks using the minimum and maximum coordinates supplied.
+
+  group: Voxels
+  id: craft.voxels.box
+  name: voxels.box( min, max )
+  parameters:
+  - description: vec3 or (x,y,z), the coordinate of the minimum corner of the box
+    name: min
+  - description: vec3 or (x,y,z), the coordinate of the maximum corner of the box
+    name: max
+  related:
+  - craft.block
+  syntax: |
+    scene.voxels:box ( min, max )
+    scene.voxels:box ( x1, y1, z1, x2, y2, z2 )
+#---------------------------------
+
+
+#---------------------------------
+# craft.voxels.line
+#---------------------------------
+- category: method
+  description: >
+    Sets a line shaped array of blocks using the minimum and maximum coordinates supplied.
+
+  group: Voxels
+  id: craft.voxels.line
+  name: voxels.line( start, end )
+  parameters:
+  - description: vec3 or (x,y,z), the coordinate of the start of the line
+    name: start
+  - description: vec3 or (x,y,z), the coordinate of the end of the line
+    name: end
+  related:
+  - craft.block
+  syntax: |
+    scene.voxels:line ( start, end )
+    scene.voxels:line ( x1, y1, z1, x2, y2, z2 )
+#---------------------------------
+
+
+#---------------------------------
+# craft.voxels.updateBlock
+#---------------------------------
+- category: method
+  description: >
+    Schedules a block update for the block at a specified coordinate.
+    The `ticks` parameter controls how long in the future before the update will occur.
+    Each tick is roughly 1/60th of a second. Using 0 will cause an update to occur next frame.
+
+
+    Block updates call the `blockUpdate(ticks)` method on scripted blocks.
+    Block updates can be triggered inside a scripted block itself by using `self:schedule(ticks)`.
+
+  group: Voxels
+  id: craft.voxels.updateBlock
+  name: voxels.updateBlock( coord, ticks )
+  parameters:
+  - description: vec3 or (x,y,z), the coordinate of the block to update
+    name: coord
+  - description: ticks, the number of ticks to wait for the update
+    name: ticks
+  related:
+  - craft.block
+  syntax: |
+    scene.voxels:updateBlock ( coord, ticks )
+    scene.voxels:updateBlock ( x, y, z, ticks )
+
+#---------------------------------
+
+
+#---------------------------------
+# craft.voxels.raycast
+#---------------------------------
+- category: method
+
+  description: >
+    Performs a raycast on the voxel terrain. The callback provided must follow the signature:
+
+
+    `function callback(coord, id, face)`
+
+
+    The `coord` parameter (vec3) contains the coordinate of the current voxel encountered.
+
+
+    If `coord` is nil, this means the raycast has gone outside of the bounds of the voxel terrain (i.e. no voxel found).
+
+
+    The `id` parameter contains the id of the current voxel encountered.
+
+
+    The `face` parameter (vec3) contains the direction of the face hit by the raycast (i.e. vec3(0,1,0) would be the top).
+
+
+    At each step the callback function can return `true` or `false`.
+    Returning `true` will terminate the raycast early, `false` will continue the raycast until the maximum distance is reached.
+
+  group: Voxels
+  id: voxels.raycast
+  name: voxels.raycast( origin, direction, distance, callback )
+  parameters:
+  - description: vec3, the origin of the ray
+    name: origin
+  - description: vec3, the direction of the ray
+    name: direction
+  - description: vec3, the maximum distance the ray can travel
+    name: distance
+  - description: function, a callback that will be called for each voxel encountered
+    name: callback
+  related:
+  - craft.voxels
+  examples:
+  - example: |
+      -- Use the main camera to get the position and direction for the raycast from a screen location
+      origin, dir = craft.camera.main:screenToRay(vec2(WIDTH/2, HEIGHT/2))
+
+      scene.voxels:raycast(origin, dir, 100, function(coord, id, face)
+        if coord and id ~= 0 then
+          print('found a block at '..coord..' with id '..id)
+          return true
+        end
+        return false
+      end)
+
+  syntax: |
+    scene.voxels:raycast( start, direction, distance, callback )
+
+#---------------------------------
+
+
+#---------------------------------
+# craft.voxels.iterateBounds
+#---------------------------------
+- category: method
+  description: >
+    Iterates through all blocks within the min and max bounds provided sending the information to a callback function.
+
+    The callback function should take the following form `function myCallback(x, y, z, id)`.
+
+  group: Voxels
+  id: craft.voxels.iterateBounds
+  name: voxels.iterateBounds( min, max, callback )
+  parameters:
+  - description: vec3 or (x,y,z), the coordinate of the minimum corner of the box
+    name: min
+  - description: vec3 or (x,y,z), the coordinate of the maximum corner of the box
+    name: max
+  - description: function, the function to callback for each block encountered
+    name: callback
+  related:
+  - craft.block
+  syntax: |
+    scene.voxels:iterateBounds( min, max, callback )
+#---------------------------------
+
+
+#---------------------------------
+# craft.voxels.isRegionLoaded
+#---------------------------------
+- category: method
+  description: >
+    Checks if all the voxels within the min and max bounds are currently loaded. This is useful for generating more complex structures that
+    make require adjacent areas to be loaded.
+  group: Voxels
+  id: craft.voxels.isRegionLoaded
+  name: voxels.isRegionLoaded( min, max )
+  parameters:
+  - description: vec3 or (x,y,z), the coordinate of the minimum corner of the box
+    name: min
+  - description: vec3 or (x,y,z), the coordinate of the maximum corner of the box
+    name: max
+  related:
+  - craft.block
+  syntax: |
+    scene.voxels:isRegionLoaded( min, max )
+#---------------------------------
+
+
+#---------------------------------
+# craft.voxels.enableStorage
+#---------------------------------
+- category: method
+  description: >
+    Enables storage within the voxel system.
+    This causes regions to be saved within the project inside a folder named `storageName`.
+  group: Voxels
+  id: craft.voxels.enableStorage
+  name: voxels.enableStorage( storageName )
+  parameters:
+  - description: string, the name of the storage folder to use
+    name: storageName
+  related:
+  - craft.block
+  syntax: |
+    scene.voxels:enableStorage( storageName )
+#---------------------------------
+
+
+#---------------------------------
+# craft.voxels.disableStorage
+#---------------------------------
+- category: method
+  description: >
+    Disables storage.
+  group: Voxels
+  id: craft.voxels.disableStorage
+  name: voxels.disableStorage()
+  related:
+  - craft.block
+  syntax: |
+    scene.voxels:disableStorage()
+#---------------------------------
+
+
+#---------------------------------
+# craft.voxels.deleteStorage
+#---------------------------------
+- category: method
+  description: >
+    Deletes a particular storage folder (if it exists).
+  group: Voxels
+  id: craft.voxels.deleteStorage
+  name: voxels.deleteStorage( storageName )
+  parameters:
+  - description: string, the name of the storage folder to delete
+    name: storageName
+  related:
+  - craft.block
+  syntax: |
+    scene.voxels:deleteStorage( storageName )
+#---------------------------------
+
+
+#---------------------------------
+# craft.block
+#---------------------------------
+- category: type
+  description: >
+    This type represents a specific voxel block variant.
+    You can create a block type via `scene.voxels.blocks:new( name )`.
+
+
+    By default a block type has the appearance of a white cube (1x1x1 units).
+    A block type's appearance can be customised by adding and removing cubes of various sizes, changing their textures or applying tints.
+
+
+    A block type's behaviour can be customised by enabling scriping and adding special methods to it:
+
+
+    `blockType:created()` - called when the block is created
+
+    `blockType:destroyed()` - called when the block is destroyed (removed)
+
+    `blockType:buildModel(model)` - called when the block is about to be modeled
+
+
+    Instances of scripted blocks cannot store additional data in their tables unless they are set to `dynamic`.
+    Non-dynamic blocks have up to 32 bits of state that can be used to store per-block data (see `block.state` for more information).
+    Dynamic blocks can store additional values in their tables.
+    Dynamic blocks come with their own entity, which can be used to render custom models, or animate them in ways static blocks cannot.
+
+
+    Scripted and dynamic blocks use significantly more resources than standard non-scripted blocks and care must be taken to avoid using too much memory or slowing down the voxel system.
+    A good rule of thumb is to match the complexity of a custom block to how often it is used.
+
+
+    Please note that any properties marked `instance only` can only be accessed via block instances, i.e. those created by setting voxels and passed into callbacks.
+
+  # examples:
+  # - example: |
+  #     -- Create a new custom block type
+  #     MyCustomBlock = scene.voxels.blocks:new("MyCustomBlock")
+
+  #     -- Set the texture for all sides of the model (can be ALL, NORTH, EAST, SOUTH, WEST, UP, DOWN)
+  #     MyCustomBlock.setTexture(ALL, "Blocks:Stone")
+
+  #     -- MyCustomBlock.setColor(side, color)
+
+
+
+  group: Voxels
+  id: craft.block
+  name: craft.block
+  parameters:
+  - description: int, the id of this block type
+    name: id
+  - description: string, the name of this block type
+    name: name
+  - description: type, the state of this block
+    name: state
+  - description: int, the type of geometry to generate, can be EMPTY, SOLID, TRANSPARENT or TRANSLUCENT
+    name: geometry
+  - description: int, the type of render pass to use, can be OPAQUE or TRANSLUCENT
+    name: renderPass
+  - description: bool, whether this block type supports tinting (changing color)
+    name: tinted
+  - description: bool, whether this block type supports scripting
+    name: scripted
+  - description: bool, whether this block type is dynamic
+    name: dynamic
+  - description: int, the x location of this block (instance only)
+    name: x
+  - description: int, the y location of this block (instance only)
+    name: y
+  - description: int, the z location of this block (instance only)
+    name: z
+
+  syntax: |
+
+  related:
+  - craft.renderer
+#---------------------------------
+
+
+#---------------------------------
+# block.get
+#---------------------------------
+- category: method
+  description: >
+    Gets data from this block for the specified key. There are a number of that can be used for different block data.
+
+
+    `BLOCK_ID` - Get this block's id (int)
+
+    `BLOCK_NAME` - Get this block's name (string)
+
+    `BLOCK_STATE` - Get this block's state (int)
+
+    `COLOR` - Get this block's tint color (color), only works for tinted blocks
+
+    To get custom block properties, use a string with the name of that property.
+
+  group: Voxels
+  id: block.get
+  name: block.get( key )
+  parameters:
+  - description: the key of the data to set on this block
+    name: key
+  related:
+  - craft.block
+  syntax: |
+    myBlock:get ( key )
+    myBlock:get ( key1, key2, ... keyN )
+    myBlock:get ( keyArray )
+#---------------------------------
+
+
+#---------------------------------
+# block.set
+#---------------------------------
+- category: method
+  description: >
+    Sets data on this block for the specified key. There are a number of that can be used for different block data.
+
+
+    `BLOCK_ID` - Set this blocks id (int), effectively changing the type of block
+
+    `BLOCK_NAME` - Set this blocks name (string), effectively changing the type of block
+
+    `BLOCK_STATE` - Set this blocks state (int)
+
+    `COLOR` - Set this blocks tint color (color), only works for tinted blocks
+
+
+    If a block changes its own type then it will behave as the new block and will trigger any `destroyed()` and `created()` callbacks.
+
+
+    To modify custom block properties, use a string with the name of that property.
+
+  group: Voxels
+  id: block.set
+  name: block.set( key, value )
+  parameters:
+  - description: the key of the data to set on this block
+    name: key
+  - description: the value to set the data to
+    name: value
+  related:
+  - craft.block
+  syntax: |
+    myBlock:set ( key, value )
+    myBlock:set ( key1, value1, ... keyN, valueN )
+    myBlock:set ( keyValueTable )
+  examples:
+  - example: |
+      local Blinky = scene.voxels.blocks:new("Blinky")
+
+      function Blinky:created()
+        -- Schedule an update in one second
+        self:schedule(60)
+      end
+
+      function Blinky:blockUpdate(ticks)
+        -- Create a random color
+        local randomColor = color(random(128,255), random(128,255), random(128,255))
+
+        -- set block color and then schedule another update in one second
+        self:set(COLOR, randomColor)
+        self:schedule(60)
+      end
+#---------------------------------
+
+
+#---------------------------------
+# craft.volume
+#---------------------------------
+- category: type
+  description: >
+    This component represents a 3D voxel volume.
+    Voxel volume components store block data as well as handling rendering and physics.
+
+  examples:
+  - example: |
+      -- create a new entity
+      entity = scene:entity()
+      entity:add(craft.volume, 10, 10, 10)
+
+  group: Voxels
+  id: craft.volume
+  name: craft.volume
+  syntax: |
+    myEntity:add(craft.volume, x, y, z)
+  related:
+  - craft.entity
+#---------------------------------
+
+
+#---------------------------------
+# volume.size
+#---------------------------------
+- category: method
+  description: >
+    Returns the size of this volume in voxels as 3 components (x, y, z).
+
+  group: Voxels
+  id: volume.size
+  name: volume.size()
+  returns: size of the volume as 3 separate values
+  related:
+  - craft.volume
+  syntax: |
+    sx, sy, sz = myVolume:size()
+  examples:
+  - example: |
+      entity = scene:entity()
+      volume = entity:add(craft.volume, 10, 10, 10)
+      -- outputs: 10 10 10
+      print(volume:size())
+#---------------------------------
+
+
+#---------------------------------
+# volume.get
+#---------------------------------
+- category: method
+  description: >
+    Gets data from a block at a particular location using the specified key(s). There are a number that can be used for different block data:
+
+
+    `BLOCK_ID` - Get this block's id (int)
+
+    `BLOCK_NAME` - Get this block's name (string)
+
+    `BLOCK_STATE` - Get this block's state (int)
+
+    `COLOR` - Get this block's tint color (color), only works for tinted blocks
+
+    To get custom block properties, use a string with the name of that property.
+
+  group: Voxels
+  id: volume.get
+  name: volume.get( coord, key )
+  parameters:
+  - description: vec3 or (x,y,z), the coordinate of the block (in world coordinates) to get the data from
+    name: coord
+  - description: the key of the data to get for this block
+    name: key
+  related:
+  - craft.scene
+  returns: multiple, the values associated with the block's keys (or nil if it does not exist)
+  syntax: |
+    myVolume:get ( key )
+    myVolume:get ( key1, key2, ... keyN )
+    myVolume:get ( keyArray )
+#---------------------------------
+
+
+#---------------------------------
+# volume.set
+#---------------------------------
+- category: method
+  description: >
+    Sets a block within this volume at the coordinates given (x, y, z).
+    Coordinates can be supplied as either a vec3, or as a set of 3 numbers.
+
+  group: Voxels
+  id: volume.set
+  name: volume.set( x, y, z, id )
+  parameters:
+  - description: number, the x location of the block to set
+    name: x
+  - description: number, the y location of the block to set
+    name: y
+  - description: number, the z location of the block to set
+    name: z
+  related:
+  - craft.set
+  syntax: |
+    myVolume:set( x, y, z, id )
+    myVolume:set( coord, id )
+    myVolume:set( x, y, z, name )
+    myVolume:set( coord, name )
+    myVolume:set( x, y, z, key1, value1, ... keyN, valueN )
+    myVolume:set( coord, keyValueTable )
+    myVolume:set( x, y, z, keyValueTable )
+
+  examples:
+  - example: |
+      entity = scene:entity()
+      volume = entity:add(craft.volume, 10, 10, 10)
+      -- Create a purple block inside the volume
+      volume:set(1, 1, 1, 'name', 'solid', 'color', color(255,0,0))
+
+#---------------------------------
+
+
+#---------------------------------
+# volume.resize
+#---------------------------------
+- category: method
+
+  description: >
+    Resizes the volume to a specific size.
+
+  group: Voxels
+  id: volume.resize
+  name: volume.resize( x, y, z )
+  parameters:
+  - description: float, the width of the volume
+    name: x
+  - description: float, the height of the volume
+    name: y
+  - description: float, the depth of the volume
+    name: z
+  related:
+  - craft.volume
+
+  syntax: |
+    myVolume:resize( x, y, z )
+#---------------------------------
+
+
+#---------------------------------
+# volume.load
+#---------------------------------
+- category: method
+  description: >
+    Loads a saved volume.
+  group: Voxels
+  id: volume.load
+  name: volume.load( asset )
+  parameters:
+  - description: asset key, the name of the asset to load
+    name: asset
+  related:
+  - craft.volume
+
+  syntax: |
+    myVolume:load( asset.documents.MyVoxelModel )
+#---------------------------------
+
+
+#---------------------------------
+# volume.save
+#---------------------------------
+- category: method
+  description: >
+    Saves a volume as a voxel asset.
+  group: Voxels
+  id: volume.save
+  name: volume.save( asset )
+  parameters:
+  - description: asset key, the name of the asset to save
+    name: asset
+  related:
+  - craft.volume
+
+  syntax: |
+    myVolume:save( asset.documents.MyVoxelModel )
+#---------------------------------
+
+#---------------------------------
+# craft.ar
+#---------------------------------
+- category: type
+  description: >
+    The Augmented Reality (AR) system.
+    Please note that to use the AR feature your device must possess an A9 or greater processor.
+    To determine if your device supports AR, use `craft.ar.isSupported`.
+
+
+    Only some devices support AR face tracking - these include devices with a TrueDepth camera,
+    such as the iPhone X product line (X, XR, XS, XS Max) and iPad Pro 2018 and above models.
+    To determine if your device supports AR face tracking, use `craft.ar.isFaceTrackingSupported`.
+
+
+    To enable AR, use `scene.ar:run()`. This will use the sky to render the camera feed to the background.
+    If you do not want to display the camera feed, simply disable the sky. To disable AR you can call the `pause()` function.
+
+
+    To enable AR face tracking supply an addition parameter in the form of `scene.ar:run(AR_FACE_TRACKING)`.
+
+
+    In world tracking configuration the AR system will automatically try to detect and estimate horizontal and vertical planes in the scene.
+    To be notified of when this happens you must set the anchor callbacks, such as `scene.ar.didAddAnchors`.
+    These will be called with an array of anchor objects which contain a `position` and `extent` which can be used for positioning objects in the world.
+
+
+    To interact with the AR world, use `hitTest(screenPoint, options)`, and check the array of hitTestResult objects for any intersections.
+
+  group: AR
+  id: craft.ar
+  name: craft.ar
+  parameters:
+  - description: bool [static, readonly], use to determine if your device supports AR
+    name: isSupported
+  - description: bool [static, readonly], use to determine if your device supports AR face tracking
+    name: isFaceTrackingSupported
+  - description: bool [readonly], use to determine if AR is currenly active
+    name: isRunning
+  - description: bool, enable and disable plane detection
+    name: planeDetection
+  - description: enum [readonly], the current tracking state - can be `AR_NOT_AVAILABLE`, `AR_LIMITED` and `AR_NORMAL`
+    name: trackingState
+  - description: enum [readonly], the reason for the current tracking state (if `AR_LIMITED`) - can be `AR_NONE`, `AR_EXCESSIVE_MOTION` and `AR_INSUFFICIENT_FEATURES`
+    name: trackingStateReason
+  - description: function, the function to call when one or more anchors is added to the AR system
+    name: didAddAnchors
+  - description: function, the function to call when one or more anchors is updated
+    name: didUpdateAnchors
+  - description: function, the function to call when one or more anchors is removed
+    name: didRemoveAnchors
+#---------------------------------
+
+#---------------------------------
+# ar.run
+#---------------------------------
+- category: method
+  description: >
+    Enables AR if possible.
+    This overrides the sky's visuals as well as the main camera's transform and projection matrix.
+
+  group: AR
+  id: ar.run
+  name: ar.run()
+  parameters:
+  - description: constant, the type of tracking to use (i.e. `AR_WORLD_TRACKING` or `AR_FACE_TRACKING`)
+    name: trackingType
+  related:
+  - craft.ar
+  - AR_WORLD_TRACKING
+  - AR_FACE_TRACKING
+  syntax: |
+    scene.ar:run()
+    scene.ar:run(AR_WORLD_TRACKING)
+    scene.ar:run(AR_FACE_TRACKING)
+#---------------------------------
+
+#---------------------------------
+# ar.pause
+#---------------------------------
+- category: method
+  description: >
+    Pauses AR.
+
+  group: AR
+  id: ar.pause
+  name: ar.pause()
+  related:
+  - craft.ar
+  syntax: |
+    scene.ar:pause()
+#---------------------------------
+
+#---------------------------------
+# ar.hitTest
+#---------------------------------
+- category: method
+  description: >
+    Performs a hit test (raycast) against the AR world.
+    Any objects that are hit by the ray are returned as a list of `craft.ar.hitTestResult`.
+
+
+    The options parameter is a bitmask with the following flags:
+
+    `AR_FEATURE_POINT` - Search for feature points
+
+    `AR_ESTIMATED_PLANE` - Search for estimated horizontal surfaces
+
+    `AR_EXISTING_PLANE` - Search for detected planes
+
+    `AR_EXISTING_PLANE_CLIPPED` - Search for detected planes (clipped to edges)
+
+  group: AR
+  id: ar.hitTest
+  name: ar.hitTest( screenPoint, options )
+  parameters:
+  - description: vec2, the screen point to check for hits in the AR world
+    name: screenPoint
+  - description: bitmask, the options to use for finding things in the AR world
+    name: options
+  related:
+  - craft.ar
+  - craft.ar.hitTestResult
+  - AR_FEATURE_POINT
+  - AR_ESTIMATED_PLANE
+  - AR_EXISTING_PLANE
+  - AR_EXISTING_PLANE_CLIPPED
+  returns: array, the hitTestResult objects (if any) resulting from this hit test
+  syntax: |
+    scene.ar:hitTest( screenPoint )
+#---------------------------------
+
+#---------------------------------
+# ar.makeFaceModel
+#---------------------------------
+- category: method
+  description: >
+    Generates an AR face model from the supplied blend shape table.
+    This table is in the same format as the one supplied by the face anchor `blendShapes` property.
+
+  group: AR
+  id: ar.makeFaceModel
+  name: ar.makeFaceModel()
+  parameters:
+  - description: table, the table of blend shapes to use to construct the model
+    name: blendShapes
+  related:
+  - craft.ar
+  - craft.ar.anchor
+  - AR_FACE_TRACKING
+  syntax: |
+    scene.ar:makeFaceModel(blendShapes)
+#---------------------------------
+
+#---------------------------------
+# craft.ar.anchor
+#---------------------------------
+- category: type
+  description: >
+    An anchor in the AR world.
+    These can represent a point (single location) or a plane (flat surface).
+    The `identifier` property is useful for uniquely identifying anchors that are automatically created by plane detection.
+
+
+    When running an AR face tracking session, the anchor will contain additional data, such as `blendShapes` and `faceModel`.
+
+
+    The `blendShapes` property returns a table of facial expression data, where each key is a string relating to the expression
+    and the corresponding value is a number between 0 and 1.
+    There are a very large number of keys and so you may find it useful to use the AR Face example project to browse though them.
+
+  group: AR
+  id: craft.ar.anchor
+  name: craft.ar.anchor
+  parameters:
+  - description: int, the type of anchor
+    name: type
+  - description: string, the unique identifier for this anchor
+    name: identifier
+  - description: vec3, the position of this anchor (in the AR world)
+    name: position
+  - description: vec3, the extent of this anchor (for planes)
+    name: extent
+  - description: model, a 3D model representing the detected face (for faces)
+    name: faceModel
+  - description: table, a table of blend shapes representing various facial expressions (for faces)
+    name: blendShapes
+  - description: vec3, the position (in local face coordinates) of the left eye (for faces)
+    name: leftEyePosition
+  - description: quat, the rotation (in local face coordinates) of the left eye (for faces)
+    name: leftEyeRotation
+  - description: vec3, the position (in local face coordinates) of the right eye (for faces)
+    name: rightEyePosition
+  - description: quat, the rotation (in local face coordinates) of the right eye (for faces)
+    name: rightEyeRotation
+  - description: vec3, the estimated location that the eyes are currently looking at in local face coordinates (for faces)
+    name: lookAtPoint
+
+#---------------------------------
+
+#---------------------------------
+# craft.ar.hitTestResult
+#---------------------------------
+- category: type
+  description: >
+    A hit test result that is returned by the `ar:hitTest()` function.
+
+    The `type` of hittest can be
+
+  group: AR
+  id: craft.ar.hitTestResult
+  name: craft.ar.hitTestResult
+  parameters:
+  - description: int, the type of hit test
+    name: type
+  - description: string, the unique identifier for this anchor
+    name: identifier
+  - description: vec3, the position of this anchor (in the AR world)
+    name: position
+  - description: vec3, the extent of this anchor (for planes)
+    name: extent
+  related:
+  - AR_FEATURE_POINT
+  - AR_ESTIMATED_PLANE
+  - AR_EXISTING_PLANE
+  - AR_EXISTING_PLANE_CLIPPED
+
+#---------------------------------
+
+#---------------------------------
+# AR_WORLD_TRACKING
+#---------------------------------
+- category: const
+  description: >
+    This constant specifies the AR world tracking session type used in the `ar.run()` method.
+  group: AR
+  id: AR_WORLD_TRACKING
+  name: AR_WORLD_TRACKING
+  related:
+  - craft.ar
+  - AR_FACE_TRACKING
+  returns: int
+  syntax: AR_WORLD_TRACKING
+#---------------------------------
+
+#---------------------------------
+# AR_FACE_TRACKING
+#---------------------------------
+- category: const
+  description: >
+    This constant specifies the AR face tracking session type used in the `ar.run()` method.
+  group: AR
+  id: AR_FACE_TRACKING
+  name: AR_FACE_TRACKING
+  related:
+  - craft.ar
+  - AR_WORLD_TRACKING
+  returns: int
+  syntax: AR_FACE_TRACKING
+#---------------------------------
+
+#---------------------------------
+# AR_NOT_AVAILABLE
+#---------------------------------
+- category: const
+  description: >
+    This constant specifies that AR world tracking is not currently available. Returned by `ar.trackingState`.
+  group: AR
+  id: AR_NOT_AVAILABLE
+  name: AR_NOT_AVAILABLE
+  related:
+  - craft.ar
+  returns: int
+  syntax: AR_NOT_AVAILABLE
+#---------------------------------
+
+#---------------------------------
+# AR_LIMITED
+#---------------------------------
+- category: const
+  description: >
+    This constant specifies that AR world tracking is currently limited. Returned by `ar.trackingState`, with further details returned by `ar.trackingStateReason`.
+  group: AR
+  id: AR_LIMITED
+  name: AR_LIMITED
+  related:
+  - craft.ar
+  returns: int
+  syntax: AR_LIMITED
+#---------------------------------
+
+#---------------------------------
+# AR_NORMAL
+#---------------------------------
+- category: const
+  description: >
+    This constant specifies that AR world tracking is currently normal. Returned by `ar.trackingState`.
+  group: AR
+  id: AR_NORMAL
+  name: AR_NORMAL
+  related:
+  - craft.ar
+  returns: int
+  syntax: AR_NORMAL
+#---------------------------------
+
+#---------------------------------
+# AR_NONE
+#---------------------------------
+- category: const
+  description: >
+    This constant specifies that AR world tracking is not currently limited. Returned by `ar.trackingStateReason`.
+  group: AR
+  id: AR_NONE
+  name: AR_NONE
+  related:
+  - craft.ar
+  returns: int
+  syntax: AR_NONE
+#---------------------------------
+
+#---------------------------------
+# AR_EXCESSIVE_MOTION
+#---------------------------------
+- category: const
+  description: >
+    This constant specifies that AR world tracking is currently limited due to excessive device motion. Returned by `ar.trackingStateReason`.
+  group: AR
+  id: AR_EXCESSIVE_MOTION
+  name: AR_EXCESSIVE_MOTION
+  related:
+  - craft.ar
+  returns: int
+  syntax: AR_EXCESSIVE_MOTION
+#---------------------------------
+
+#---------------------------------
+# AR_INSUFFICIENT_FEATURES
+#---------------------------------
+- category: const
+  description: >
+    This constant specifies that AR world tracking is currently limited due to insufficient feature points.
+    This could be due to a lack of contrasting features on surfaces (such as a white table or mirrored surface).
+    Returned by `ar.trackingStateReason`.
+  group: AR
+  id: AR_INSUFFICIENT_FEATURES
+  name: AR_INSUFFICIENT_FEATURES
+  related:
+  - craft.ar
+  returns: int
+  syntax: AR_INSUFFICIENT_FEATURES
+#---------------------------------
+
+#---------------------------------
+# AR_FEATURE_POINT
+#---------------------------------
+- category: const
+  description: >
+    Used by `ar:hitTest` as a mask for detecting feature points during hit test.
+  group: AR
+  id: AR_FEATURE_POINT
+  name: AR_FEATURE_POINT
+  related:
+  - craft.ar
+  returns: int
+  syntax: AR_FEATURE_POINT
+#---------------------------------
+
+#---------------------------------
+# AR_ESTIMATED_PLANE
+#---------------------------------
+- category: const
+  description: >
+    Used by `ar:hitTest` as a mask for detecting estimated planes during hit test.
+  group: AR
+  id: AR_ESTIMATED_PLANE
+  name: AR_ESTIMATED_PLANE
+  related:
+  - craft.ar
+  returns: int
+  syntax: AR_ESTIMATED_PLANE
+#---------------------------------
+
+#---------------------------------
+# AR_EXISTING_PLANE
+#---------------------------------
+- category: const
+  description: >
+    Used by `ar:hitTest` as a mask for detecting existing planes during hit test.
+  group: AR
+  id: AR_EXISTING_PLANE
+  name: AR_EXISTING_PLANE
+  related:
+  - craft.ar
+  returns: int
+  syntax: AR_EXISTING_PLANE
+#---------------------------------
+
+#---------------------------------
+# AR_EXISTING_PLANE_CLIPPED
+#---------------------------------
+- category: const
+  description: >
+    Used by `ar:hitTest` as a mask for detecting existing planes (clipped to edges) during hit test.
+  group: AR
+  id: AR_EXISTING_PLANE_CLIPPED
+  name: AR_EXISTING_PLANE_CLIPPED
+  related:
+  - craft.ar
+  returns: int
+  syntax: AR_EXISTING_PLANE_CLIPPED
+#---------------------------------
+
+#---------------------------------
+# Noise Overview
+#---------------------------------
+- id: noiseOverview
+  category: overview
+  description: >
+    The noise library contains a series of noise modules that can be used to generate a large variety of procedural content.
+
+    Use `getValue(x,y,z)` to generate a scalar noise value. Some modules take a number of inputs (set with `setSource(input)`).
+
+
+    Noise modules fall into the following catagories:
+
+    `Generators` - These modules generate values directly and require no inputs
+
+    `Transformers` - These modules transform their inputs in some way to create a new effect
+
+
+    Refer to each individual module's documentation to see how they work.
+  group: Noise
+  name: Noise
+#---------------------------------
+
+
+#---------------------------------
+# craft.noise.perlin
+#---------------------------------
+- category: type
+  description: A perlin noise generator module. Zero inputs.
+  parameters:
+  - description: int, the number of octaves, controlling the detail of the noise
+    name: octaves
+  - description: float, the frequency of the first octave
+    name: frequency
+  - description: float, the persistence controls how rough the noise produced is
+    name: persistence
+  - description: float, the lucunarity controls the multiplier between successive octaves
+    name: lacunarity
+  - description: int, the seed
+    name: seed
+
+  examples:
+  - example: |
+      local n = craft.noise.perlin()
+      local value = n:getValue(x,y,z)
+
+  group: Noise
+  id: craft.noise.perlin
+  name: craft.noise.perlin
+  syntax: |
+    n = craft.noise.perlin()
+#---------------------------------
+
+
+#---------------------------------
+# craft.noise.rigidMulti
+#---------------------------------
+- category: type
+  description: A rigid multi-fractal noise generator module. Zero inputs.
+  parameters:
+  - description: int, the number of octaves, controlling the detail of the noise
+    name: octaves
+  - description: float, the frequency of the first octave
+    name: frequency
+  - description: float, the lucunarity controls the multiplier between successive octaves
+    name: lacunarity
+  - description: int, the seed
+    name: seed
+
+  examples:
+  - example: |
+      local n = craft.noise.rigidMulti()
+      local value = n:getValue(x,y,z)
+
+  group: Noise
+  id: craft.noise.rigidMulti
+  name: craft.noise.rigidMulti
+  syntax: |
+    n = craft.noise.rigidMulti()
+
+#---------------------------------
+
+
+#---------------------------------
+# craft.noise.billow
+#---------------------------------
+- category: type
+  description: A billow noise generator module. Zero inputs.
+  parameters:
+  - description: int, the number of octaves, controlling the detail of the noise
+    name: octaves
+  - description: float, the frequency of the first octave
+    name: frequency
+  - description: float, the persistence controls how rough the noise produced is
+    name: persistence
+  - description: float, the lucunarity controls the multiplier between successive octaves
+    name: lacunarity
+  - description: int, the seed
+    name: seed
+
+  examples:
+  - example: |
+      local n = craft.noise.billow()
+      local value = n(x,y,z)
+
+  group: Noise
+  id: craft.noise.billow
+  name: craft.noise.billow
+  syntax: |
+    n = craft.noise.billow()
+#---------------------------------
+
+
+#---------------------------------
+# craft.noise.turbulence
+#---------------------------------
+- category: type
+  description: Transformer module that distorts input using turbulent noise. One input.
+  parameters:
+  - description: float, the frequency of the turbulence
+    name: frequency
+  - description: float, how rough the turbulence is
+    name: roughness
+  - description: float, how much distortion to apply
+    name: power
+  - description: int, the seed
+    name: seed
+
+  examples:
+  - example: |
+      local n1 = craft.noise.perlin()
+      local n2 = craft.noise.turbulence()
+      n2:setSource(0, n1)
+      local value = n(x,y,z)
+
+  group: Noise
+  id: craft.noise.turbulence
+  name: craft.noise.turbulence
+  syntax: |
+    n = craft.noise.turbulence()
+#---------------------------------
+
+
+#---------------------------------
+# craft.noise.cache
+#---------------------------------
+- category: type
+  description: Caches the source module value when evaluated at the same coordinates more than once. This can improve performance when an expensive module may be evaluated more than once within a single noise tree. One input.
+  group: Noise
+  id: craft.noise.cache
+  name: craft.noise.cache
+  syntax: |
+    n = craft.noise.cache()
+#---------------------------------
+
+#---------------------------------
+# craft.noise.const
+#---------------------------------
+- category: type
+  description: Constant noise module. Returns a constant value at any location. Zero inputs.
+  examples:
+  - example: |
+      local n = craft.noise.const(10)
+
+      -- Always returns 10
+      local value = n(x,y,z)
+
+  group: Noise
+  id: craft.noise.const
+  name: craft.noise.const
+  syntax: |
+    n = craft.noise.const(value)
+#---------------------------------
+
+#---------------------------------
+# craft.noise.select
+#---------------------------------
+- category: type
+  description: Selects one of two noise modules based on the output of the control module and the set bounds. Three inputs.
+  group: Noise
+  id: craft.noise.select
+  name: craft.noise.select
+  syntax: |
+    n = craft.noise.select()
+#---------------------------------
+
+#---------------------------------
+# craft.noise.gradient
+#---------------------------------
+- category: type
+  description: Returns a gradient in the y-axis mapped from zero to one. Zero inputs.
+  group: Noise
+  id: craft.noise.gradient
+  name: craft.noise.gradient
+  syntax: |
+    n = craft.noise.gradient()
+#---------------------------------
+
+#---------------------------------
+# craft.noise.min
+#---------------------------------
+- category: type
+  description: Returns the minimum of two noise modules. Two inputs.
+  group: Noise
+  id: craft.noise.min
+  name: craft.noise.min
+  syntax: |
+    n = craft.noise.min()
+#---------------------------------
+
+#---------------------------------
+# craft.noise.max
+#---------------------------------
+- category: type
+  description: Returns the maximum of two noise modules. Two inputs.
+  group: Noise
+  id: craft.noise.max
+  name: craft.noise.max
+  syntax: |
+    n = craft.noise.max()
+#---------------------------------
+
+#---------------------------------
+# craft.noise.add
+#---------------------------------
+- category: type
+  description: Returns the addition of two noise modules. Two inputs.
+  group: Noise
+  id: craft.noise.add
+  name: craft.noise.add
+  syntax: |
+    n = craft.noise.add()
+#---------------------------------
+
+#---------------------------------
+# craft.noise.multiply
+#---------------------------------
+- category: type
+  description: Returns the multiplication of two noise modules. Two inputs.
+  group: Noise
+  id: craft.noise.multiply
+  name: craft.noise.multiply
+  syntax: |
+    n = craft.noise.multiply()
+#---------------------------------
+
+#---------------------------------
+# craft.noise.invert
+#---------------------------------
+- category: type
+  description: Returns the negative of the source noise module. One inputs.
+  group: Noise
+  id: craft.noise.invert
+  name: craft.noise.invert
+  syntax: |
+    n = craft.noise.invert()
+#---------------------------------
+
+#---------------------------------
+# craft.noise.abs
+#---------------------------------
+- category: type
+  description: Returns the absolute version of the source noise module. One input.
+  group: Noise
+  id: craft.noise.abs
+  name: craft.noise.abs
+  syntax: |
+    n = craft.noise.abs()
+#---------------------------------
+
+#---------------------------------
+# craft.noise.merge
+#---------------------------------
+- category: type
+  description: Returns the first non-zero value of two noise modules. Two inputs.
+  group: Noise
+  id: craft.noise.merge
+  name: craft.noise.merge
+  syntax: |
+    n = craft.noise.merge()
+#---------------------------------
+
+#---------------------------------
+# craft.noise.scaleOffset
+#---------------------------------
+- category: type
+  description: Scales and offsets the output of a noise module. One input.
+  group: Noise
+  id: craft.noise.scaleOffset
+  name: craft.noise.scaleOffset
+  syntax: |
+    n = craft.noise.scaleOffset()
+#---------------------------------
+
+#---------------------------------
+# craft.noise.displace
+#---------------------------------
+- category: type
+  description: Displaces the coordinates of a noise module using three other noise modules. Four inputs.
+  group: Noise
+  id: craft.noise.displace
+  name: craft.noise.displace
+  syntax: |
+    n = craft.noise.displace()
+#---------------------------------
+
+#---------------------------------
+# craft.noise.scale
+#---------------------------------
+- category: type
+  description: Scales the coordinates of the input source module. One input.
+  group: Noise
+  id: craft.noise.scale
+  name: craft.noise.scale
+  syntax: |
+    n = craft.noise.scale()
+#---------------------------------

@@ -1,0 +1,361 @@
+id: accelerometer
+name: Motion & Location
+subtitle: Detecting Device Motion and Physical Location
+ordering:
+    - Detecting Motion
+    - Location
+functions:
+#---------------------------------
+# Gravity
+#--------------------------------- 
+- category: const
+  description: This global variable represents the current direction and amount
+    of gravity relative to the screen orientation while the viewer is running. The
+    y component of this vector will almost always be negative, indicating that the
+    device is being held upright.
+  group: Detecting Motion
+  id: Gravity
+  name: Gravity
+  parameters:
+  - description: float, the amount of gravity in the x direction
+    name: x
+  - description: float, the amount of gravity in the y direction
+    name: y
+  - description: float, the amount of gravity in the z direction
+    name: z
+  related:
+  - vec3
+  - UserAcceleration
+  syntax: |
+    Gravity
+    Gravity.x
+    Gravity.y
+    Gravity.z
+#---------------------------------
+      
+#---------------------------------
+# UserAcceleration
+#---------------------------------       
+- category: const
+  description: This global variable represents the current acceleration relative
+    to the device while the viewer is running. You can use this to detect things
+    such as shaking.
+  group: Detecting Motion
+  id: UserAcceleration
+  name: UserAcceleration
+  parameters:
+  - description: float, the amount of acceleration in the x direction
+    name: x
+  - description: float, the amount of acceleration in the y direction
+    name: y
+  - description: float, the amount of acceleration in the z direction
+    name: z
+  related:
+  - vec3
+  - Gravity
+  syntax: |
+    UserAcceleration
+    UserAcceleration.x
+    UserAcceleration.y
+    UserAcceleration.z    
+#---------------------------------
+
+#---------------------------------
+# RotationRate
+#---------------------------------       
+- category: const
+  description: This global variable represents the rotation rate of the device around three axes. 
+    Internally, this makes use of the device gyroscope (if available). On devices where a 
+    gyroscope is not available, `RotationRate` is a zero vector.
+  group: Detecting Motion
+  id: RotationRate
+  name: RotationRate
+  parameters:
+  - description: float, the amount of rotation around the x axis
+    name: x
+  - description: float, the amount of rotation around the y axis
+    name: y
+  - description: float, the amount of rotation around the z axis
+    name: z
+  related:
+  - vec3
+  - Gravity
+  syntax: |
+    RotationRate
+    RotationRate.x
+    RotationRate.y
+    RotationRate.z    
+#---------------------------------
+
+#---------------------------------
+# location.enable()
+#---------------------------------
+- category: function
+  description: >
+    Calling this function requests that the device should begin monitoring its physical location.
+    You must call this before you can reliably read location data. Upon first activation the 
+    device will request permission to access its location, permission must be granted in order to
+    use location functions.
+    
+    Location updates are disabled by default.
+
+  examples:
+  - example: |
+      function setup()
+          -- enable location updating
+          location.enable()
+          
+          print(location)
+      end
+  group: Location
+  id: location.enable
+  name: location.enable()
+
+  related:
+  - location.disable
+  - location.available
+  
+  syntax: |
+    location.enable()
+#---------------------------------
+
+#---------------------------------
+# location.disable()
+#---------------------------------
+- category: function
+  description: >
+    Calling this function requests that the device should stop monitoring its physical location.
+    Disabling location updates preserves battery power.
+
+  group: Location
+  id: location.disable
+  name: location.disable()
+
+  related:
+  - location.enable
+  - location.available
+  
+  syntax: |
+    location.disable()
+#---------------------------------
+
+#---------------------------------
+# location.available()
+#---------------------------------
+- category: function
+  description: >
+    This function returns whether location data is available. If location updating has not been enabled, 
+    or is not permitted, this function will return false.
+
+  group: Location
+  id: location.available
+  name: location.available()
+
+  related:
+  - location.enable
+  - location.disable
+  
+  syntax: |
+    location.available()
+    
+  returns: A boolean value specifying whether location data is available
+#---------------------------------
+
+#---------------------------------
+# location.distanceTo()
+#---------------------------------
+- category: function
+  description: >
+    This function returns the distance in meters from the current location (if available) to the
+    specified `latitude` and `longitude`.
+
+  group: Location
+  id: location.distanceTo
+  name: location.distanceTo(lat, lon)
+
+  related:
+  - location.distanceBetween
+  
+  syntax: |
+    location.distanceTo(lat, lon)
+    
+  returns: Distance in meters between the current location and specified coordinates
+#---------------------------------
+
+#---------------------------------
+# location.distanceBetween()
+#---------------------------------
+- category: function
+  description: >
+    This function returns the distance in meters between two locations specified by the
+    coordinates `lat1`, `lon1`, `lat2`, `lon2`.
+
+  group: Location
+  id: location.distanceBetween
+  name: location.distanceBetween(lat1,lon1,lat2,lon2)
+
+  related:
+  - location.distanceTo
+  
+  syntax: |
+    location.distanceBetween(lat1, lon1, lat2, lon2)
+    
+  returns: Distance in meters between the two specified coordinates
+#---------------------------------
+
+#---------------------------------
+# location.latitude
+#---------------------------------
+- category: const
+  description: >
+    This value specifies the current latitude if location is available.
+
+  group: Location
+  id: location.latitude
+  name: location.latitude
+
+  related:
+  - location.longitude
+  - location.enable
+  
+  syntax: |
+    location.latitude
+    
+  returns: Current latitude, if available. Nil if not.
+#---------------------------------
+
+#---------------------------------
+# location.longitude
+#---------------------------------
+- category: const
+  description: >
+    This value specifies the current longitude if location is available.
+
+  group: Location
+  id: location.longitude
+  name: location.longitude
+
+  related:
+  - location.latitude
+  - location.enable
+  
+  syntax: |
+    location.longitude
+    
+  returns: Current longitude, if available. Nil if not.
+#---------------------------------
+
+#---------------------------------
+# location.altitude
+#---------------------------------
+- category: const
+  description: >
+    This value specifies the current altitude if location is available.
+    
+    Positive values indicate altitudes above sea level. Negative values indicate altitudes below sea level.
+
+  group: Location
+  id: location.altitude
+  name: location.altitude
+
+  related:
+  - location.enable
+  
+  syntax: |
+    location.altitude
+    
+  returns: Current altitude, if available. Nil if not.
+#---------------------------------
+
+#---------------------------------
+# location.horizontalAccuracy
+#---------------------------------
+- category: const
+  description: >
+    This value specifies the horizontal accuracy of the latitude and longitude of the current location.
+    This value indicates the radius of the circle in which the latitude and longitude are at the center.
+    
+
+    A negative value indicates that the location’s latitude and longitude are invalid.
+
+  group: Location
+  id: location.horizontalAccuracy
+  name: location.horizontalAccuracy
+
+  related:
+  - location.latitude
+  - location.longitude
+  
+  syntax: |
+    location.horizontalAccuracy
+    
+  returns: Current horizontal accuracy, if available. Nil if not.
+#---------------------------------
+
+#---------------------------------
+# location.verticalAccuracy
+#---------------------------------
+- category: const
+  description: >
+    This value specifies the accuracy of the altitude of the current location.
+    The altitude value could be plus or minus this value.
+    
+
+    A negative value indicates that the current altitude is invalid.
+
+  group: Location
+  id: location.verticalAccuracy
+  name: location.verticalAccuracy
+
+  related:
+  - location.altitude
+  
+  syntax: |
+    location.verticalAccuracy
+    
+  returns: Current vertical accuracy, if available. Nil if not.
+#---------------------------------
+
+#---------------------------------
+# location.speed
+#---------------------------------
+- category: const
+  description: >
+    This value specifies the current speed of the device in meters
+    per second. A negative value indicates an invalid speed.
+
+  group: Location
+  id: location.speed
+  name: location.speed
+
+  related:
+  - location.course
+  
+  syntax: |
+    location.speed
+    
+  returns: Current speed, if available. Nil if not.
+#---------------------------------
+
+#---------------------------------
+# location.course
+#---------------------------------
+- category: const
+  description: >
+    This variable specifies the current heading of the device measured in degrees
+    starting at due north and moving clockwise around the compass. A negative
+    value indicates an invalid direction.
+
+  group: Location
+  id: location.course
+  name: location.course
+
+  related:
+  - location.speed
+  
+  syntax: |
+    location.course
+    
+  returns: Current course, if available. Nil if not.
+#---------------------------------
+
