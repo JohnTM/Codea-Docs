@@ -1227,8 +1227,8 @@ functions:
 - id: physics.spherecast
   category: function
   description: >
-    Performs a spherecast in the scene against any rigidbodies with attached shapes.
-    A spherecast works by projecting a sphere in the direction of the cast and detecting any shapes that it intersects.
+    Performs a spherecast that detects any rigidbodies with attached shapes.
+    You can think of a spherecast as a sphere with the given `radius` that travels along a straight line. It starts at `origin,` travels in `direction` for the given `distance,` and stops if it hits a rigidbody shape along the way.
 
   group: Physics
   name: physics.spherecast
@@ -1250,7 +1250,7 @@ functions:
     scene.physics:spherecast(origin, direction, distance, radius, group)
     scene.physics:spherecast(origin, direction, distance, radius, group, mask)
   returns: |
-    table, if the spherecast intersects a rigidbody this function will return a table containing the following key-value pairs:
+    table or nil, if the spherecast intersects a rigidbody shape this function will return a table containing the following key-value pairs:
 
         entity => entity hit
         point => point of intersection
@@ -1421,7 +1421,7 @@ functions:
 # craft.shape.box
 #---------------------------------
 - category: type
-  description: This component represents a box physics shape. Attach this to an entity with a rigidbody to make it respond to physical forces.
+  description: This component represents a box physics shape. Attach this to an entity with a rigidbody to make it respond to physical forces. Shapes do not scale with the entities they're attached to, so the size you give a shape when adding it is the size it stays permanently.
   group: Physics
   id: craft.shape.box
   name: craft.shape.box
@@ -1448,7 +1448,7 @@ functions:
 # craft.shape.sphere
 #---------------------------------
 - category: type
-  description: This component represents a sphere physics shape. Attach this to an entity with a rigidbody to make it respond to physical forces.
+  description: This component represents a sphere physics shape. Attach this to an entity with a rigidbody to make it respond to physical forces. Shapes do not scale with the entities they're attached to, so the size you give a shape when adding it is the size it stays permanently.
   examples:
   - example: |
       -- create a new entity
@@ -1470,7 +1470,7 @@ functions:
 # craft.shape.model
 #---------------------------------
 - category: type
-  description: This component represents an arbitrary physics shape made from a model. Attach this to an entity with a rigidbody to make it respond to physical forces.
+  description: This component represents an arbitrary physics shape made from a model. Attach this to an entity with a rigidbody to make it respond to physical forces. Shapes do not scale with the entities they're attached to, so the size you give a shape when adding it is the size it stays permanently.
   examples:
   - example: |
       -- create a new entity
@@ -1495,7 +1495,7 @@ functions:
 # craft.shape.capsule
 #---------------------------------
 - category: type
-  description: This component represents a capsule physics shape. Attach this to an entity with a rigidbody to make it respond to physical forces.
+  description: This component represents a capsule physics shape. Attach this to an entity with a rigidbody to make it respond to physical forces. Shapes do not scale with the entities they're attached to, so the size you give a shape when adding it is the size it stays permanently.
   examples:
   - example: |
       -- create a new entity
@@ -1587,6 +1587,8 @@ functions:
     Using `voxels:enableStorage(storage)` allows voxels to be saved to a project subfolder with the specified name.
     As a technical note, volumes and chunks are saved as zlib compressed json files. Block types, scheduled updates and block entities are all saved.
     If a block id changes due to inserting a new block type of removing an existing one, the loaded chunk/volume may change unexpectedly.
+    
+    When deciding whether to use voxels directly or to use voxels inside of volumes, it is important to test both scenarios first, as voxel behavior is not identical in each situation. For example rigidbody collisions work differently in each context.
 
   parameters:
   - description: vec3, the viewing coordinates to stream voxels around (in world coordinates)
@@ -2262,7 +2264,8 @@ functions:
 - category: type
   description: >
     This component represents a 3D voxel volume.
-    Voxel volume components store block data as well as handling rendering and physics.
+    Voxel volume components store block data as well as handling rendering and physics. 
+    When deciding whether to use voxels directly or to use voxel volumes, it is important to test both scenarios first, as voxel behavior is not identical in each situation. For example rigidbody collisions work differently in each context.
 
   examples:
   - example: |
